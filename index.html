@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ORDO TEAM</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Michroma&display=swap" rel="stylesheet">
+<style>
+  /* ═══ ЦВЕТА (с фото: чёрная ночь, серый капюшон, фиолетовое свечение) ═══ */
+  :root {
+    --bg: #070609;
+    --panel: #18171c;
+    --panel-2: #1f1e24;
+    --line: rgba(255, 255, 255, .1);
+    --text: #eceaf1;
+    --gray: #9d9aa7;        /* серая половина заголовков */
+    --muted: #85828e;
+    --glass: rgba(38, 36, 44, .55);
+    --glass-border: rgba(222, 220, 230, .75);
+    --chip: rgba(150, 147, 162, .5);
+    --violet: #8f3dff;
+    --violet-2: #b066ff;
+    --glow: #9b4dff;
+    --ok: #9ff5c8;
+    --safe-top: max(env(safe-area-inset-top), var(--tg-content-safe-area-inset-top, 0px));
+    --safe-bottom: max(env(safe-area-inset-bottom), var(--tg-safe-area-inset-bottom, 0px));
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font-family: Inter, system-ui, sans-serif; font-size: 14px; line-height: 1.55; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
+  img { display: block; max-width: 100%; }
+
+  /* ═══ ФОН ═══ */
+  #dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .guides { position: fixed; inset: 0; z-index: 3; pointer-events: none; max-width: 520px; margin: 0 auto; }
+  .guides::before, .guides::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 1px;
+    background: repeating-linear-gradient(180deg, rgba(255,255,255,.16) 0 3px, transparent 3px 7px);
+    opacity: .55;
+  }
+  .guides::before { left: 24.7%; }
+  .guides::after { left: 70.1%; }
+
+  .app { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding-bottom: calc(var(--safe-bottom) + 30px); }
+
+  /* ═══ НАВИГАЦИЯ — две стеклянные пилюли, как на фото ═══ */
+  .nav {
+    position: fixed; z-index: 20; top: calc(var(--safe-top) + 10px); left: 50%; transform: translateX(-50%);
+    width: calc(100% - 20px); max-width: 500px; display: flex; justify-content: space-between; gap: 8px;
+  }
+  .glass {
+    display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 99px;
+    background: var(--glass); border: 1.5px solid var(--glass-border);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 6px 24px rgba(0,0,0,.4);
+  }
+  .tab { padding: 8px 15px; border-radius: 99px; font-size: 12.5px; font-weight: 600; color: #f1eff6; text-shadow: 0 1px 2px rgba(0,0,0,.4); transition: background .3s; white-space: nowrap; }
+  .tab.active { background: var(--chip); }
+  .cta-tab { display: flex; align-items: center; gap: 0; }
+  .cta-tab .cta-text { padding: 8px 14px 8px 16px; border-radius: 99px 0 0 99px; background: var(--chip); font-size: 12.5px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .cta-tab .icon { width: 32px; height: 32px; margin-left: 2px; border-radius: 50%; border: 1.5px solid var(--glass-border); display: grid; place-items: center; background: var(--chip); }
+  .cta-tab.ok .icon { border-color: var(--ok); color: var(--ok); }
+  .topfade { position: fixed; z-index: 15; top: 0; left: 0; right: 0; height: calc(var(--safe-top) + 64px); pointer-events: none; background: linear-gradient(180deg, rgba(7,6,9,.9) 40%, rgba(7,6,9,0)); }
+
+  /* ═══ ЭКРАНЫ ═══ */
+  .screen { display: none; }
+  .screen.active { display: block; animation: enter .6s cubic-bezier(.2,.8,.2,1); }
+  @keyframes enter { from { opacity: 0; } }
+  .reveal { opacity: 0; transform: translateY(16px); animation: rise .8s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .pad { padding: 0 20px; }
+
+  /* ═══ ТИПОГРАФИКА ═══ */
+  .duo { margin: 0; font-weight: 300; letter-spacing: -.01em; line-height: 1.05; }
+  .duo .g { color: var(--gray); display: block; }
+  .duo .w { color: var(--text); display: block; font-weight: 400; }
+  .caps { text-transform: uppercase; letter-spacing: .01em; }
+  .vline { width: 72px; height: 2px; background: var(--violet); box-shadow: 0 0 10px rgba(143,61,255,.8); margin: 16px 0; }
+  .cap::first-letter { font-size: 2.15em; font-weight: 500; line-height: .8; }
+  .small { font-size: 12px; color: var(--muted); line-height: 1.8; }
+  .label { font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .wide { font-family: Michroma, sans-serif; }
+
+  /* ═══ HERO ═══ */
+  .hero { position: relative; overflow: hidden; }
+  .hero img { width: 118%; max-width: none; margin-left: -9%; height: auto; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 32%; background: linear-gradient(180deg, transparent, var(--bg)); pointer-events: none; }
+  .hero::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12%; background: linear-gradient(180deg, var(--bg), transparent); z-index: 1; pointer-events: none; }
+  .orb {
+    position: absolute; z-index: 2; left: 50%; top: 64.3%; transform: translate(-50%, -50%);
+    width: 78px; height: 78px; border-radius: 50%; background: #fff; color: #111;
+    box-shadow: 0 0 0 13px rgba(255,255,255,.28), 0 0 0 28px rgba(255,255,255,.12), 0 0 50px rgba(190,140,255,.55);
+    display: grid; place-items: center; text-align: center; font-weight: 700; font-size: 13px; line-height: 1.05;
+    transition: transform .2s; animation: breathe 3.5s ease-in-out infinite;
+  }
+  .orb:active { transform: translate(-50%, -50%) scale(.93); }
+  .orb small { display: block; font-size: 9.5px; font-weight: 600; opacity: .55; margin-top: 3px; }
+  @keyframes breathe { 50% { box-shadow: 0 0 0 15px rgba(255,255,255,.24), 0 0 0 32px rgba(255,255,255,.09), 0 0 70px rgba(190,140,255,.7); } }
+  .scroll { position: absolute; z-index: 2; right: 14px; top: 62%; font-size: 10.5px; font-weight: 600; text-align: center; }
+  .scroll svg { display: block; margin: 0 auto 3px; animation: bob 1.8s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(3px); } }
+
+  /* ═══ КТО МЫ ═══ */
+  .who { margin-top: 6px; display: grid; gap: 22px; }
+  .who h2 { font-size: 34px; }
+  .who p { margin: 0; font-size: 14.5px; color: #dcd9e3; line-height: 1.7; }
+  .together h3 { font-size: 26px; margin-bottom: 14px; }
+
+  /* ═══ КНОПКИ ═══ */
+  .outline-btn { display: inline-flex; align-items: stretch; height: 38px; border: 1.5px solid #fff; border-radius: 99px; overflow: hidden; transition: transform .15s; }
+  .outline-btn:active { transform: scale(.97); }
+  .outline-btn .t { display: flex; align-items: center; padding: 0 18px; font-size: 12.5px; font-weight: 600; }
+  .outline-btn .a { display: grid; place-items: center; width: 44px; border-left: 1.5px solid #fff; border-radius: 99px; }
+  .white-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 6px 22px; border-radius: 99px; background: #fff; color: #111; font-weight: 700; font-size: 15px; height: 58px; box-shadow: 0 0 34px rgba(190,140,255,.35); transition: transform .15s; }
+  .white-btn .a { width: 46px; height: 46px; border-radius: 50%; background: #111; color: #fff; display: grid; place-items: center; }
+  .white-btn:active, .ghost-btn:active { transform: scale(.98); }
+  .ghost-btn { width: 100%; height: 54px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.75); font-weight: 600; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform .15s; }
+  [disabled] { opacity: .55; pointer-events: none; }
+
+  /* ═══ КАРТОЧКА 01 ═══ */
+  .card01 { position: relative; margin-top: 46px; display: grid; grid-template-columns: 1fr 46%; min-height: 300px; }
+  .card01::before { content: ""; position: absolute; top: 0; bottom: 0; left: 24.7%; right: 46%; background: var(--panel); }
+  .card01 .txt { position: relative; padding: 26px 14px 22px 20px; display: flex; flex-direction: column; }
+  .card01 h3 { font-size: 21px; line-height: 1.12; }
+  .card01 .txt p { margin: 0 0 0 calc(24.7vw - 20px); max-width: 160px; }
+  .card01 .num { margin-top: auto; padding-top: 18px; font-weight: 700; font-size: 15px; }
+  .card01 .pic { position: relative; background: url(img/card.jpg) center / cover; }
+
+  /* ═══ ФИНАЛ ═══ */
+  .finale { position: relative; margin-top: 50px; min-height: 280px; background: url(img/bottom.jpg) 64% 100% / auto 100% no-repeat; display: flex; flex-direction: column; justify-content: center; }
+  .finale::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,6,9,.85) 0%, rgba(7,6,9,.35) 50%, transparent 75%), linear-gradient(180deg, var(--bg), transparent 30%); }
+  .finale > * { position: relative; }
+  .finale .brand { font-size: 26px; letter-spacing: .02em; }
+  .finale .brand b { font-size: 1.22em; font-weight: 400; }
+  .finale .slogan { font-size: 32px; font-weight: 300; line-height: 1.1; }
+
+  /* ═══ БАННЕРЫ ДРУГИХ ЭКРАНОВ ═══ */
+  .banner { position: relative; height: 250px; background: url(img/hero.jpg) 50% 70% / 175% auto no-repeat; }
+  .banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, var(--bg) 0%, transparent 35%, transparent 60%, var(--bg) 100%); }
+  .banner.b-join::after { background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 30%, transparent 52%, transparent 70%, var(--bg) 100%); }
+  .banner.b-card { background: url(img/card.jpg) 50% 30% / cover no-repeat; height: 230px; }
+  .banner.b-done { background: url(img/bottom.jpg) 60% 100% / auto 150% no-repeat; height: 280px; }
+  .banner.b-done::after { background: linear-gradient(180deg, var(--bg) 0%, transparent 28%, transparent 88%, var(--bg) 100%); }
+  .price-orb {
+    position: absolute; z-index: 1; left: 50%; top: 58%; transform: translate(-50%, -50%);
+    width: 104px; height: 104px; border-radius: 50%; background: #fff; color: #111; display: grid; place-items: center; text-align: center;
+    box-shadow: 0 0 0 14px rgba(255,255,255,.26), 0 0 0 30px rgba(255,255,255,.1), 0 0 70px rgba(190,140,255,.6);
+  }
+  .price-orb b { display: block; font-family: Michroma, sans-serif; font-size: 30px; font-weight: 400; line-height: 1; }
+  .price-orb small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .14em; margin-top: 6px; }
+  .done-logo { position: absolute; z-index: 1; left: 50%; top: 34%; transform: translate(-50%, -50%); width: 62%; filter: drop-shadow(0 0 18px rgba(176,102,255,.6)); }
+
+  /* ═══ ВНУТРИ ═══ */
+  .rows { margin-top: 14px; border-top: 1px solid var(--line); }
+  .row-i { display: grid; grid-template-columns: 46px 1fr; padding: 20px 0; border-bottom: 1px solid var(--line); }
+  .row-i .n { font-weight: 700; font-size: 14px; padding-top: 3px; }
+  .row-i b { display: block; font-weight: 300; font-size: 19px; text-transform: uppercase; margin-bottom: 4px; }
+  .row-i span { color: var(--muted); font-size: 13px; }
+  .faq { display: grid; gap: 10px; margin-top: 14px; }
+  .faq details { border: 1.5px solid rgba(255,255,255,.18); border-radius: 26px; padding: 0 20px; background: rgba(255,255,255,.02); }
+  .faq summary { list-style: none; cursor: pointer; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 500; font-size: 14px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "↗"; font-size: 14px; transition: transform .3s; color: var(--gray); }
+  .faq details[open] summary::after { transform: rotate(90deg); }
+  .faq p { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+
+  /* ═══ ВСТУПИТЬ ═══ */
+  .code { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; margin: 22px 0 14px; background: var(--panel); border-left: 2px solid var(--violet); }
+  .code .v { font-family: Michroma, sans-serif; font-size: 15px; letter-spacing: .06em; margin-top: 4px; word-break: break-all; }
+  .copy { flex: none; height: 32px; padding: 0 14px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.7); font-size: 12px; font-weight: 600; }
+  .copy.done { border-color: var(--ok); color: var(--ok); }
+  .stack { display: grid; gap: 10px; }
+  .status { min-height: 20px; margin-top: 12px; text-align: center; font-size: 13px; color: var(--muted); }
+  .status.warn { color: #ffcf96; }
+  .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .manual { margin-top: 18px; background: var(--panel); padding: 0 18px; }
+  .manual summary { list-style: none; cursor: pointer; padding: 15px 0; font-size: 13.5px; font-weight: 600; color: var(--gray); display: flex; justify-content: space-between; }
+  .manual summary::-webkit-details-marker { display: none; }
+  .manual summary::after { content: "↓"; transition: transform .3s; }
+  .manual[open] summary::after { transform: rotate(180deg); }
+  .kv { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .kv .k { color: var(--muted); flex: none; }
+  .kv .v { font-family: ui-monospace, monospace; font-size: 11.5px; text-align: right; word-break: break-all; }
+  .kv:last-child { padding-bottom: 15px; }
+
+  .toast { position: fixed; z-index: 30; left: 50%; bottom: calc(var(--safe-bottom) + 22px); transform: translate(-50%, 16px); background: #1f1e24; border: 1.5px solid rgba(255,255,255,.4); padding: 9px 18px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .reveal { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<canvas id="dust"></canvas>
+<div class="guides"></div>
+<div class="topfade"></div>
+<div class="toast" id="toast"></div>
+
+<nav class="nav">
+  <div class="glass">
+    <button class="tab active" data-go="home">Клуб</button>
+    <button class="tab" data-go="inside">Внутри</button>
+  </div>
+  <button class="glass cta-tab" data-go="join" id="ctaTab">
+    <span class="cta-text" id="ctaLabel">Вступить</span>
+    <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></span>
+  </button>
+</nav>
+
+<main class="app">
+
+  <!-- ═══ ЭКРАН 1: КЛУБ ═══ -->
+  <section class="screen active" id="s-home">
+    <div class="hero">
+      <img src="img/hero.jpg" alt="ORDO TEAM">
+      <button class="orb" id="orbBtn"><span id="orbLabel"></span></button>
+      <div class="scroll">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
+        Листай вниз
+      </div>
+    </div>
+
+    <div class="pad who">
+      <h2 class="duo reveal"><span class="g" data-t="whoA"></span><span class="w" data-t="whoB"></span></h2>
+      <p class="cap reveal" style="animation-delay:.08s" data-t="whoText"></p>
+      <div class="together reveal" style="animation-delay:.16s">
+        <h3 class="duo"><span class="w" style="font-weight:300" data-t="togetherA"></span><span class="w" style="font-weight:300" data-t="togetherB"></span></h3>
+        <button class="outline-btn" data-go="join"><span class="t" data-t="togetherBtn"></span><span class="a"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span></button>
+      </div>
+    </div>
+
+    <div class="card01 reveal">
+      <div class="txt">
+        <h3 class="duo caps"><span class="w" data-t="cardA"></span><span class="g" data-t="cardB"></span><span class="w" data-t="cardC"></span></h3>
+        <div class="vline"></div>
+        <p class="small" data-t="cardText"></p>
+        <div class="num">01</div>
+      </div>
+      <div class="pic"></div>
+    </div>
+
+    <div class="finale pad reveal">
+      <div class="brand wide"><b>O</b>RDO TEAM</div>
+      <div class="slogan" data-t="slogan"></div>
+    </div>
+  </section>
+
+  <!-- ═══ ЭКРАН 2: ВНУТРИ ═══ -->
+  <section class="screen" id="s-inside">
+    <div class="banner b-card"></div>
+    <div class="pad">
+      <h2 class="duo reveal" style="font-size:34px; margin-top:-20px; position:relative"><span class="g" data-t="insideA"></span><span class="w" data-t="insideB"></span></h2>
+      <div class="vline reveal" style="animation-delay:.05s"></div>
+      <p class="small reveal" style="animation-delay:.08s; margin:0" data-t="insideLead"></p>
+      <div class="rows" id="features"></div>
+      <div class="label reveal" style="margin-top:34px; animation-delay:.4s">Вопросы</div>
+      <div class="faq reveal" style="animation-delay:.45s" id="faq"></div>
+    </div>
+  </section>
+
+  <!-- ═══ ЭКРАН 3: ВСТУПИТЬ ═══ -->
+  <section class="screen" id="s-join">
+    <div class="banner b-join">
+      <div class="price-orb"><div><b id="priceVal"></b><small>USDT</small></div></div>
+    </div>
+    <div class="pad">
+      <h2 class="duo reveal" style="font-size:32px"><span class="g" data-t="joinA"></span><span class="w" data-t="joinB"></span></h2>
+      <div class="vline reveal" style="animation-delay:.05s"></div>
+      <p class="small reveal" style="animation-delay:.08s; margin:0" data-t="priceNote"></p>
+      <div class="rows" id="steps"></div>
+
+      <div class="code reveal" style="animation-delay:.36s">
+        <div><div class="label">Код для комментария</div><div class="v" id="codeVal"></div></div>
+        <button class="copy" data-copy="code">Копировать</button>
+      </div>
+
+      <div class="stack reveal" style="animation-delay:.42s">
+        <button class="white-btn" id="payBtn"><span>Оплатить в Tonkeeper</span><span class="a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span></button>
+        <button class="ghost-btn" id="checkBtn">Я оплатил — проверить</button>
+      </div>
+      <div class="status" id="payStatus"></div>
+
+      <details class="manual reveal" style="animation-delay:.48s">
+        <summary>Платишь не из Tonkeeper?</summary>
+        <div class="kv"><span class="k">Адрес</span><span class="v" id="walletVal"></span><button class="copy" data-copy="wallet">⧉</button></div>
+        <div class="kv"><span class="k">Сумма</span><span class="v" id="amountVal"></span></div>
+        <div class="kv"><span class="k">Сеть</span><span class="v">TON · USDT</span></div>
+        <div class="kv"><span class="k">Комментарий</span><span class="v" id="codeVal2"></span><button class="copy" data-copy="code">⧉</button></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ═══ ЭКРАН 4: ДОСТУП ═══ -->
+  <section class="screen" id="s-done">
+    <div class="banner b-done"><img class="done-logo" src="img/logo.png" alt="ORDO"></div>
+    <div class="pad" style="text-align:center">
+      <h2 class="duo caps" style="font-size:32px"><span class="g" data-t="doneA"></span><span class="w" data-t="doneB"></span></h2>
+      <div class="vline" style="margin:16px auto"></div>
+      <p style="margin:0 auto; max-width:300px; color:#dcd9e3" data-t="doneLead"></p>
+      <div style="margin-top:28px"><button class="ghost-btn" id="closeBtn">Вернуться в чат</button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ТЕКСТЫ — черновые, поправим вместе
+   ═══════════════════════════════════════════════════════════ */
+const TEXTS = {
+  orbLabel: "Вступить",
+  whoA: "Кто", whoB: "мы?",
+  whoText: "Мы — команда, которая строит, придумывает и идёт дальше. Технологии, дизайн, свои проекты — и общее видение.",
+  togetherA: "Растём", togetherB: "вместе",
+  togetherBtn: "Вступить",
+  cardA: "ORDO TEAM —", cardB: "больше,", cardC: "чем команда",
+  cardText: "Здесь собрались те, кто мечтает, строит и решает задачи. Вместе мы заходим дальше.",
+  slogan: "Без границ.",
+
+  insideA: "Что", insideB: "внутри",
+  insideLead: "Коротко о том, за что ты платишь.",
+  features: [
+    { title: "Закрытый чат", text: "Общение без случайных людей и рекламы." },
+    { title: "Материалы",    text: "То, что не выкладываем в открытый доступ." },
+    { title: "Разборы",      text: "Смотрим проекты участников и говорим честно." },
+    { title: "Связи",        text: "Знакомства, партнёрства, совместные дела." },
+  ],
+  faq: [
+    { q: "Это подписка?", a: "Нет. Платишь один раз — доступ остаётся навсегда." },
+    { q: "Как я попаду в группу?", a: "После оплаты админ получает уведомление и добавляет тебя вручную, обычно в течение дня." },
+    { q: "Почему оплата в USDT?", a: "Так быстрее и без банков. Перевод в сети TON доходит за полминуты." },
+  ],
+
+  joinA: "Вступить", joinB: "в команду",
+  priceNote: "Один раз и навсегда. Оплата в USDT, сеть TON.",
+  steps: [
+    { title: "Оплата", text: "Жми кнопку — сумма и код подставятся в Tonkeeper сами." },
+    { title: "Подтверждение", text: "Подтверди перевод. На комиссию нужно ~0.05 TON." },
+    { title: "Доступ", text: "Возвращайся сюда — мы сами увидим оплату." },
+  ],
+
+  doneA: "Ты", doneB: "в команде",
+  doneLead: "Оплата пришла. Админ уже получил уведомление и скоро добавит тебя в группу.",
+};
+
+/* ═══ ДАННЫЕ ОТ БОТА: ?c=КОД&p=ЦЕНА&w=КОШЕЛЁК&paid=0|1 (без них — демо) ═══ */
+const USDT_MASTER_RAW = "0:b113a994b5024a16719f69139328eb759596c38a25f59028b146fecdc3621dfe";
+const USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs";
+const q = new URLSearchParams(location.search);
+const DEMO = !q.get("c") && q.get("paid") !== "1";
+const S = { code: q.get("c") || "CLUB-DEMO42", price: q.get("p") || "10", wallet: q.get("w") || "UQ...демо-адрес...кошелька", paid: q.get("paid") === "1" };
+const PRICE_UNITS = Math.round(parseFloat(S.price) * 1e6);
+
+const tg = window.Telegram && Telegram.WebApp;
+const haptic = (t = "light") => { try { tg.HapticFeedback.impactOccurred(t); } catch (e) {} };
+if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor("#070609"); tg.setBackgroundColor("#070609"); tg.disableVerticalSwipes(); } catch (e) {} }
+
+/* ── тексты ── */
+const $ = (s) => document.querySelector(s);
+document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = TEXTS[el.dataset.t]; });
+$("#orbLabel").innerHTML = `${TEXTS.orbLabel}<small>${S.price} USDT</small>`;
+$("#priceVal").textContent = S.price;
+$("#codeVal").textContent = $("#codeVal2").textContent = S.code;
+$("#walletVal").textContent = S.wallet;
+$("#amountVal").textContent = `${S.price} USDT`;
+const row = (n, t, d, i) => `<div class="row-i reveal" style="animation-delay:${.12 + i * .07}s"><div class="n">${n}</div><div><b>${t}</b><span>${d}</span></div></div>`;
+$("#features").innerHTML = TEXTS.features.map((f, i) => row("0" + (i + 1), f.title, f.text, i)).join("");
+$("#steps").innerHTML = TEXTS.steps.map((s, i) => row("0" + (i + 1), s.title, s.text, i)).join("");
+$("#faq").innerHTML = TEXTS.faq.map((f) => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join("");
+
+/* ── фиолетовая пыль ── */
+(() => {
+  const c = $("#dust"), ctx = c.getContext("2d");
+  let w, h, pts = [];
+  const resize = () => {
+    const d = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight;
+    c.width = w * d; c.height = h * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+    pts = Array.from({ length: Math.round(w * h / 7000) }, () => ({
+      x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.2 + .3, t: Math.random() * 6.3,
+      s: Math.random() * .02 + .006, v: Math.random() * .18 + .04, dx: (Math.random() - .5) * .08,
+      col: Math.random() < .55 ? "176,102,255" : "230,225,240",
+    }));
+  };
+  resize(); addEventListener("resize", resize);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  (function f() {
+    ctx.clearRect(0, 0, w, h);
+    for (const p of pts) {
+      p.t += p.s; p.y -= p.v; p.x += p.dx; if (p.y < -4) { p.y = h + 4; p.x = Math.random() * w; }
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.3); ctx.fillStyle = `rgba(${p.col},${.3 + Math.sin(p.t) * .3})`; ctx.fill();
+    }
+    requestAnimationFrame(f);
+  })();
+})();
+
+/* ── навигация ── */
+let current = "home";
+function go(name) {
+  if (name === "join" && S.paid) name = "done";
+  if (name === current) return;
+  current = name;
+  document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === "s-" + name));
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.go === name));
+  document.querySelectorAll("#s-" + name + " .reveal").forEach((el) => { el.style.animation = "none"; el.offsetHeight; el.style.animation = ""; });
+  window.scrollTo({ top: 0 });
+  haptic();
+  if (tg) { try { name === "home" ? tg.BackButton.hide() : tg.BackButton.show(); } catch (e) {} }
+}
+document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+$("#orbBtn").addEventListener("click", () => go("join"));
+if (tg) { try { tg.BackButton.onClick(() => go("home")); } catch (e) {} }
+
+/* ── копирование ── */
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove("show"), 1800); }
+document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+  const val = b.dataset.copy === "code" ? S.code : S.wallet;
+  try { await navigator.clipboard.writeText(val); } catch (e) { const ta = document.createElement("textarea"); ta.value = val; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  haptic("medium"); toast("Скопировано");
+  const old = b.textContent; b.textContent = "✓"; b.classList.add("done"); setTimeout(() => { b.textContent = old; b.classList.remove("done"); }, 1500);
+}));
+
+/* ── оплата ── */
+$("#payBtn").addEventListener("click", () => {
+  haptic("medium");
+  const link = `https://app.tonkeeper.com/transfer/${S.wallet}?jetton=${USDT_MASTER}&amount=${PRICE_UNITS}&text=${encodeURIComponent(S.code)}`;
+  if (DEMO) toast("Демо: здесь откроется Tonkeeper"); else if (tg) tg.openLink(link); else window.open(link, "_blank");
+  startAutoCheck();
+});
+function toRaw(a) {
+  if (a.includes(":")) return a.toLowerCase();
+  const b = atob(a.replace(/-/g, "+").replace(/_/g, "/"));
+  const wc = b.charCodeAt(1) > 127 ? b.charCodeAt(1) - 256 : b.charCodeAt(1);
+  let hex = ""; for (let i = 2; i < 34; i++) hex += b.charCodeAt(i).toString(16).padStart(2, "0");
+  return `${wc}:${hex}`;
+}
+let demoTries = 0, checking = false, autoTimer = null;
+async function isPaid() {
+  if (DEMO) { await new Promise((r) => setTimeout(r, 1500)); return demoTries++ >= 1; }
+  const wRaw = toRaw(S.wallet);
+  const r = await fetch(`https://tonapi.io/v2/accounts/${S.wallet}/events?limit=50`);
+  if (!r.ok) throw new Error("tonapi " + r.status);
+  const { events = [] } = await r.json();
+  return events.some((ev) => !ev.in_progress && (ev.actions || []).some((a) => {
+    const jt = a.JettonTransfer;
+    return a.type === "JettonTransfer" && a.status === "ok" && jt &&
+      (jt.jetton?.address || "").toLowerCase() === USDT_MASTER_RAW &&
+      (jt.recipient?.address || "").toLowerCase() === wRaw &&
+      (jt.comment || "").trim().toUpperCase() === S.code.toUpperCase() &&
+      Number(jt.amount) >= PRICE_UNITS;
+  }));
+}
+async function check(manual) {
+  if (checking) return; checking = true;
+  const btn = $("#checkBtn"), st = $("#payStatus");
+  if (manual) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Проверяю…'; st.className = "status"; st.textContent = ""; }
+  try {
+    if (await isPaid()) { markPaid(); return; }
+    if (manual) { st.className = "status warn"; st.textContent = `Пока не видно. Перевод идёт до 30 секунд — проверь, что указан код ${S.code}.`; }
+  } catch (e) { if (manual) { st.className = "status warn"; st.textContent = "Не удалось проверить, попробуй ещё раз через минуту."; } }
+  finally { checking = false; btn.disabled = false; btn.textContent = "Я оплатил — проверить"; }
+}
+$("#checkBtn").addEventListener("click", () => { haptic(); check(true); });
+function startAutoCheck() {
+  if (autoTimer) return;
+  $("#payStatus").className = "status"; $("#payStatus").textContent = "Ждём перевод — проверяем сами каждые 10 секунд…";
+  autoTimer = setInterval(() => check(false), 10000);
+}
+function markPaid() {
+  S.paid = true; clearInterval(autoTimer);
+  try { tg.HapticFeedback.notificationOccurred("success"); } catch (e) {}
+  applyPaidUi(); current = null; go("done");
+}
+function applyPaidUi() {
+  $("#ctaLabel").textContent = "Мой доступ"; $("#ctaTab").classList.add("ok");
+  $("#orbLabel").innerHTML = "Мой<br>доступ";
+}
+$("#closeBtn").addEventListener("click", () => { if (tg && !DEMO) tg.close(); else go("home"); });
+if (S.paid) applyPaidUi();
+</script>
+</body>
+</html>
