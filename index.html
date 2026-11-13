@@ -45,26 +45,64 @@
   .guides::before { left: 24.7%; }
   .guides::after { left: 70.1%; }
 
-  .app { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding-bottom: calc(var(--safe-bottom) + 30px); }
+  .app { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding-bottom: calc(var(--safe-bottom) + 110px); }
+  body.sub .app { padding-bottom: calc(var(--safe-bottom) + 30px); }
+  [hidden] { display: none !important; }
 
-  /* ═══ НАВИГАЦИЯ — две стеклянные пилюли, как на фото ═══ */
-  .nav {
-    position: fixed; z-index: 20; top: calc(var(--safe-top) + 10px); left: 50%; transform: translateX(-50%);
-    width: calc(100% - 20px); max-width: 500px; display: flex; justify-content: space-between; gap: 8px;
-  }
+  /* ═══ НАВИГАЦИЯ — стеклянная панель внизу: Клуб · Внутри · Профиль ═══ */
   .glass {
-    display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 99px;
     background: var(--glass); border: 1.5px solid var(--glass-border);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 6px 24px rgba(0,0,0,.4);
   }
-  .tab { padding: 8px 15px; border-radius: 99px; font-size: 12.5px; font-weight: 600; color: #f1eff6; text-shadow: 0 1px 2px rgba(0,0,0,.4); transition: background .3s; white-space: nowrap; }
-  .tab.active { background: var(--chip); }
-  .cta-tab { display: flex; align-items: center; gap: 0; }
-  .cta-tab .cta-text { padding: 8px 14px 8px 16px; border-radius: 99px 0 0 99px; background: var(--chip); font-size: 12.5px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
-  .cta-tab .icon { width: 32px; height: 32px; margin-left: 2px; border-radius: 50%; border: 1.5px solid var(--glass-border); display: grid; place-items: center; background: var(--chip); }
-  .cta-tab.ok .icon { border-color: var(--ok); color: var(--ok); }
-  .topfade { position: fixed; z-index: 15; top: 0; left: 0; right: 0; height: calc(var(--safe-top) + 64px); pointer-events: none; background: linear-gradient(180deg, rgba(7,6,9,.9) 40%, rgba(7,6,9,0)); }
+  .bnav {
+    position: fixed; z-index: 20; bottom: calc(var(--safe-bottom) + 12px); left: 50%; transform: translateX(-50%);
+    width: calc(100% - 28px); max-width: 420px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    padding: 5px; border-radius: 99px; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s;
+  }
+  body.sub .bnav { transform: translate(-50%, 130%); opacity: 0; pointer-events: none; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 6px; border-radius: 99px; font-size: 11px; font-weight: 600; color: #c9c6d2; text-shadow: 0 1px 2px rgba(0,0,0,.4); transition: background .3s, color .3s; }
+  .tab svg { width: 20px; height: 20px; transition: color .3s, filter .3s; }
+  .tab.active { background: var(--chip); color: #fff; }
+  .tab.active svg { color: #d4b3ff; filter: drop-shadow(0 0 6px rgba(176,102,255,.8)); }
+  .tab .dot { position: absolute; }
+  .back { position: fixed; z-index: 20; top: calc(var(--safe-top) + 12px); left: max(14px, calc(50% - 246px)); width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; opacity: 0; pointer-events: none; transform: translateX(-10px); transition: .3s; }
+  body.sub .back { opacity: 1; pointer-events: auto; transform: none; }
+  .topfade { display: none; }
+
+  /* ═══ ПРОФИЛЬ ═══ */
+  .banner.b-prof { background: url(img/bottom.jpg) 60% 100% / auto 150% no-repeat; height: 190px; }
+  .banner.b-prof::after { background: linear-gradient(180deg, var(--bg) 0%, rgba(7,6,9,.2) 40%, var(--bg) 100%); }
+  .phead { position: relative; display: flex; align-items: center; gap: 12px; margin-top: -54px; }
+  .ava { flex: none; width: 52px; height: 52px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--panel-2); border: 1.5px solid rgba(255,255,255,.28); font-weight: 500; font-size: 18px; color: var(--gray); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .ava.member { border-color: var(--violet-2); background: #21133a; color: #e6d6ff; box-shadow: 0 0 22px rgba(143,61,255,.55); }
+  .phead .nm { font-size: 16px; font-weight: 600; line-height: 1.2; }
+  .phead .un { font-size: 12.5px; color: var(--muted); }
+  .chip { margin-left: auto; flex: none; font-size: 11.5px; font-weight: 600; padding: 6px 13px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.25); color: var(--gray); }
+  .chip.member { border-color: var(--violet-2); color: #e2ccff; box-shadow: 0 0 14px rgba(143,61,255,.35); }
+
+  .mcard { position: relative; margin: 18px 0 6px; aspect-ratio: 1.586; border-radius: 22px; overflow: hidden; padding: 20px 20px 18px; display: flex; flex-direction: column; }
+  .mcard.locked { border: 1.5px dashed rgba(255,255,255,.2); background: rgba(15,14,18,.85); align-items: center; justify-content: center; gap: 10px; text-align: center; }
+  .mcard.locked .num { font-family: Michroma, sans-serif; font-size: 24px; letter-spacing: .1em; color: #3c3945; }
+  .mcard.locked p { margin: 0; font-size: 12px; color: var(--muted); }
+  .mcard.member { border: 1px solid rgba(176,102,255,.6); background: radial-gradient(120% 95% at 88% 0%, #4a1f8c 0%, #24153d 32%, #18171c 62%, #0d0c10 100%); box-shadow: 0 24px 60px rgba(143,61,255,.28), inset 0 1px 0 rgba(255,255,255,.12); }
+  .mcard.member::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.13) 48%, transparent 60%); transform: translateX(-130%); animation: sheen 5.5s ease-in-out infinite; pointer-events: none; }
+  @keyframes sheen { 0%, 55% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+  .mcard .wm { position: absolute; right: -10%; bottom: -16%; width: 72%; opacity: .1; pointer-events: none; }
+  .mcard .top { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+  .mcard .brand { font-family: Michroma, sans-serif; font-size: 12px; letter-spacing: .16em; }
+  .mcard .tier { font-size: 10.5px; font-weight: 600; letter-spacing: .22em; color: #c7b0ea; }
+  .mcard .chipico { position: relative; width: 34px; height: 25px; margin-top: 16px; border-radius: 6px; background: linear-gradient(135deg, #d9c6ff, #8f6cc9); opacity: .85; }
+  .mcard .chipico::before { content: ""; position: absolute; inset: 5px 10px; border: 1px solid rgba(40,20,70,.45); border-radius: 3px; }
+  .mcard .no { position: relative; margin-top: auto; font-family: Michroma, sans-serif; font-size: 34px; letter-spacing: .04em; line-height: 1; text-shadow: 0 0 22px rgba(176,102,255,.55); }
+  .mcard .bot { position: relative; display: flex; justify-content: space-between; margin-top: 10px; font-size: 11.5px; color: #bdb8c9; }
+  .mcard.pop { animation: pop .9s cubic-bezier(.2,.8,.2,1); }
+  @keyframes pop { from { transform: scale(.9) rotateX(18deg); opacity: 0; } }
+  .okdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); margin-right: 7px; vertical-align: 1px; }
+  .kv a { color: #d4b3ff; text-decoration: none; }
+
+  .demo-sw { position: fixed; z-index: 40; top: calc(var(--safe-top) + 12px); right: 12px; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 99px; border: 1px dashed rgba(255,255,255,.4); background: rgba(7,6,9,.75); color: #ffcf96; }
 
   /* ═══ ЭКРАНЫ ═══ */
   .screen { display: none; }
@@ -188,7 +226,7 @@
   .kv .v { font-family: ui-monospace, monospace; font-size: 11.5px; text-align: right; word-break: break-all; }
   .kv:last-child { padding-bottom: 15px; }
 
-  .toast { position: fixed; z-index: 30; left: 50%; bottom: calc(var(--safe-bottom) + 22px); transform: translate(-50%, 16px); background: #1f1e24; border: 1.5px solid rgba(255,255,255,.4); padding: 9px 18px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s; }
+  .toast { position: fixed; z-index: 30; left: 50%; bottom: calc(var(--safe-bottom) + 92px); transform: translate(-50%, 16px); background: #1f1e24; border: 1.5px solid rgba(255,255,255,.4); padding: 9px 18px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .reveal { opacity: 1; transform: none; } }
 </style>
@@ -199,16 +237,22 @@
 <div class="topfade"></div>
 <div class="toast" id="toast"></div>
 
-<nav class="nav">
-  <div class="glass">
-    <button class="tab active" data-go="home">Клуб</button>
-    <button class="tab" data-go="inside">Внутри</button>
-  </div>
-  <button class="glass cta-tab" data-go="join" id="ctaTab">
-    <span class="cta-text" id="ctaLabel">Вступить</span>
-    <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></span>
+<nav class="bnav glass">
+  <button class="tab active" data-go="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+    Клуб
+  </button>
+  <button class="tab" data-go="inside">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    Внутри
+  </button>
+  <button class="tab" data-go="profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>
+    Профиль
   </button>
 </nav>
+<button class="back glass" id="backBtn" aria-label="Назад"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+<button class="demo-sw" id="demoSw" hidden></button>
 
 <main class="app">
 
@@ -293,14 +337,22 @@
     </div>
   </section>
 
-  <!-- ═══ ЭКРАН 4: ДОСТУП ═══ -->
-  <section class="screen" id="s-done">
-    <div class="banner b-done"><img class="done-logo" src="img/logo.png" alt="ORDO"></div>
-    <div class="pad" style="text-align:center">
-      <h2 class="duo caps" style="font-size:32px"><span class="g" data-t="doneA"></span><span class="w" data-t="doneB"></span></h2>
-      <div class="vline" style="margin:16px auto"></div>
-      <p style="margin:0 auto; max-width:300px; color:#dcd9e3" data-t="doneLead"></p>
-      <div style="margin-top:28px"><button class="ghost-btn" id="closeBtn">Вернуться в чат</button></div>
+  <!-- ═══ ЭКРАН 4: ПРОФИЛЬ (гость / участник) ═══ -->
+  <section class="screen" id="s-profile">
+    <div class="banner b-prof"></div>
+    <div class="pad">
+      <div class="phead reveal">
+        <div class="ava" id="ava"></div>
+        <div><div class="nm" id="pName"></div><div class="un" id="pUser"></div></div>
+        <span class="chip" id="pChip"></span>
+      </div>
+      <h2 class="duo reveal" style="font-size:32px; margin-top:26px; animation-delay:.06s"><span class="g" id="pHA"></span><span class="w" id="pHB"></span></h2>
+      <div class="reveal" style="animation-delay:.12s" id="pCard"></div>
+      <div class="reveal" style="animation-delay:.2s; margin-top:12px" id="pRows"></div>
+      <div class="stack reveal" style="animation-delay:.28s; margin-top:20px">
+        <button class="white-btn" id="pMain"><span id="pMainT"></span><span class="a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span></button>
+        <button class="ghost-btn" id="pAdmin">Написать админу</button>
+      </div>
     </div>
   </section>
 </main>
@@ -341,8 +393,11 @@ const TEXTS = {
     { title: "Доступ", text: "Возвращайся сюда — мы сами увидим оплату." },
   ],
 
-  doneA: "Ты", doneB: "в команде",
-  doneLead: "Оплата пришла. Админ уже получил уведомление и скоро добавит тебя в группу.",
+  // профиль
+  guestA: "Твоя", guestB: "карта",
+  guestHint: "Номер откроется после вступления",
+  memberA: "Ты", memberB: "в команде",
+  paidToast: "Оплата пришла — добро пожаловать",
 };
 
 /* ═══ ДАННЫЕ ОТ БОТА: ?c=КОД&p=ЦЕНА&w=КОШЕЛЁК&paid=0|1 (без них — демо) ═══ */
@@ -350,7 +405,12 @@ const USDT_MASTER_RAW = "0:b113a994b5024a16719f69139328eb759596c38a25f59028b146f
 const USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs";
 const q = new URLSearchParams(location.search);
 const DEMO = !q.get("c") && q.get("paid") !== "1";
-const S = { code: q.get("c") || "CLUB-DEMO42", price: q.get("p") || "10", wallet: q.get("w") || "UQ...демо-адрес...кошелька", paid: q.get("paid") === "1" };
+const DEMO_UI = !q.get("c");  // открыто без данных от бота — показываем демо-подсказки
+const S = {
+  code: q.get("c") || "CLUB-DEMO42", price: q.get("p") || "10", wallet: q.get("w") || "UQ...демо-адрес...кошелька", paid: q.get("paid") === "1",
+  no: q.get("n") || (q.get("c") ? "" : "4827"),
+  date: q.get("d") || (q.get("c") ? new Date().toLocaleDateString("ru-RU") : "12.11.2026"), tx: q.get("tx") || "", group: q.get("g") || "", admin: q.get("a") || "",
+};
 const PRICE_UNITS = Math.round(parseFloat(S.price) * 1e6);
 
 const tg = window.Telegram && Telegram.WebApp;
@@ -395,22 +455,90 @@ $("#faq").innerHTML = TEXTS.faq.map((f) => `<details><summary>${f.q}</summary><p
   })();
 })();
 
-/* ── навигация ── */
-let current = "home";
+/* ── навигация: вкладки внизу, «Вступить» — отдельная страница со стрелкой назад ── */
+let current = "home", prevTab = "home";
 function go(name) {
-  if (name === "join" && S.paid) name = "done";
+  if (name === "join" && S.paid) name = "profile";
   if (name === current) return;
+  if (name !== "join") prevTab = name;
   current = name;
+  document.body.classList.toggle("sub", name === "join");
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === "s-" + name));
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.go === name));
   document.querySelectorAll("#s-" + name + " .reveal").forEach((el) => { el.style.animation = "none"; el.offsetHeight; el.style.animation = ""; });
   window.scrollTo({ top: 0 });
   haptic();
-  if (tg) { try { name === "home" ? tg.BackButton.hide() : tg.BackButton.show(); } catch (e) {} }
+  if (tg) { try { name === "join" ? tg.BackButton.show() : tg.BackButton.hide(); } catch (e) {} }
 }
 document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
 $("#orbBtn").addEventListener("click", () => go("join"));
-if (tg) { try { tg.BackButton.onClick(() => go("home")); } catch (e) {} }
+$("#backBtn").addEventListener("click", () => go(prevTab));
+if (tg) { try { tg.BackButton.onClick(() => go(prevTab)); } catch (e) {} }
+
+/* ── профиль ── */
+const U = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || { first_name: "Максим", username: "max_k" };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fullName = [U.first_name, U.last_name].filter(Boolean).join(" ") || "Участник";
+function renderProfile(fresh) {
+  const m = S.paid;
+  const ava = $("#ava");
+  ava.className = "ava" + (m ? " member" : "");
+  ava.innerHTML = U.photo_url ? `<img src="${esc(U.photo_url)}" alt="">` : esc(fullName[0].toUpperCase());
+  $("#pName").textContent = fullName;
+  $("#pUser").textContent = U.username ? "@" + U.username : "без юзернейма";
+  $("#pChip").className = "chip" + (m ? " member" : "");
+  $("#pChip").textContent = m ? "Участник" : "Гость";
+  $("#pHA").textContent = m ? TEXTS.memberA : TEXTS.guestA;
+  $("#pHB").textContent = m ? TEXTS.memberB : TEXTS.guestB;
+  // Номер выдаёт бот. Если оплата только что найдена прямо в апке — номер придёт в чат кнопкой «Моя карта»
+  const no = S.no ? "#" + S.no : "#····";
+  $("#pCard").innerHTML = m
+    ? `<div class="mcard member${fresh ? " pop" : ""}">
+         <img class="wm" src="img/logo.png" alt="">
+         <div class="top"><span class="brand">ORDO TEAM</span><span class="tier">MEMBER</span></div>
+         <div class="chipico"></div>
+         <div class="no">${no}</div>
+         <div class="bot"><span>${esc(fullName)}${U.username ? " · @" + esc(U.username) : ""}</span><span>с ${esc(S.date)}</span></div>
+       </div>`
+    : `<div class="mcard locked">
+         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#85828e" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+         <div class="num">#————</div>
+         <p>${TEXTS.guestHint}</p>
+       </div>`;
+  const txLink = S.tx ? ` <a href="https://tonviewer.com/transaction/${esc(S.tx)}" target="_blank">↗</a>` : "";
+  $("#pRows").innerHTML = m
+    ? (S.no ? "" : `<div class="kv"><span class="k">Номер карты</span><span>придёт в чат через минуту</span></div>`) +
+      `<div class="kv"><span class="k">Статус</span><span><span class="okdot"></span>Доступ навсегда</span></div>
+       <div class="kv"><span class="k">Оплата</span><span>${esc(S.price)} USDT · ${esc(S.date.slice(0, 5))}${txLink}</span></div>
+       <div class="kv"><span class="k">Код</span><span class="v">${esc(S.code)}</span></div>`
+    : `<div class="kv"><span class="k">Статус</span><span>Гость</span></div>
+       <div class="kv"><span class="k">Вход</span><span>${esc(S.price)} USDT · навсегда</span></div>`;
+  // Участник без ссылки на группу: главная кнопка — «Написать админу», вторая прячется
+  const noGroup = m && !S.group && !DEMO_UI;
+  $("#pMainT").textContent = !m ? `Вступить · ${S.price} USDT` : noGroup ? "Написать админу" : "Перейти в группу";
+  $("#pAdmin").hidden = noGroup || (!S.admin && !DEMO_UI);
+  $("#pMain").hidden = noGroup && !S.admin;
+}
+function openAdmin() {
+  if (S.admin) { const url = "https://t.me/" + S.admin; tg ? tg.openTelegramLink(url) : window.open(url, "_blank"); }
+  else toast("Здесь откроется чат с админом");
+}
+$("#pMain").addEventListener("click", () => {
+  if (!S.paid) return go("join");
+  if (S.group) { tg ? tg.openTelegramLink(S.group) : window.open(S.group, "_blank"); }
+  else if (DEMO_UI) toast("Здесь будет ссылка на группу");
+  else openAdmin();
+});
+$("#pAdmin").addEventListener("click", openAdmin);
+renderProfile();
+
+/* ── демо-переключатель (только в демо в обычном браузере, в Telegram его не видно) ── */
+if (DEMO_UI) {
+  const sw = $("#demoSw");
+  const lbl = () => { sw.textContent = "Демо: " + (S.paid ? "участник" : "гость") + " ⇄"; };
+  sw.hidden = false; lbl();
+  sw.addEventListener("click", () => { S.paid = !S.paid; demoTries = 0; S.paid ? applyPaidUi() : resetPaidUi(); renderProfile(S.paid); lbl(); if (current === "join" && S.paid) go("profile"); });
+}
 
 /* ── копирование ── */
 function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove("show"), 1800); }
@@ -470,13 +598,11 @@ function startAutoCheck() {
 function markPaid() {
   S.paid = true; clearInterval(autoTimer);
   try { tg.HapticFeedback.notificationOccurred("success"); } catch (e) {}
-  applyPaidUi(); current = null; go("done");
+  applyPaidUi(); renderProfile(true); go("profile"); toast(TEXTS.paidToast);
+  const sw = $("#demoSw"); if (!sw.hidden) sw.textContent = "Демо: участник ⇄";
 }
-function applyPaidUi() {
-  $("#ctaLabel").textContent = "Мой доступ"; $("#ctaTab").classList.add("ok");
-  $("#orbLabel").innerHTML = "Мой<br>доступ";
-}
-$("#closeBtn").addEventListener("click", () => { if (tg && !DEMO) tg.close(); else go("home"); });
+function applyPaidUi() { $("#orbLabel").innerHTML = "Моя<br>карта"; }
+function resetPaidUi() { $("#orbLabel").innerHTML = `${TEXTS.orbLabel}<small>${S.price} USDT</small>`; }
 if (S.paid) applyPaidUi();
 </script>
 </body>
