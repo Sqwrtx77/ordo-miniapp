@@ -82,23 +82,43 @@
   .chip { margin-left: auto; flex: none; font-size: 11.5px; font-weight: 600; padding: 6px 13px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.25); color: var(--gray); }
   .chip.member { border-color: var(--violet-2); color: #e2ccff; box-shadow: 0 0 14px rgba(143,61,255,.35); }
 
-  .mcard { position: relative; margin: 18px 0 6px; aspect-ratio: 1.586; border-radius: 22px; overflow: hidden; padding: 20px 20px 18px; display: flex; flex-direction: column; }
-  .mcard.locked { border: 1.5px dashed rgba(255,255,255,.2); background: rgba(15,14,18,.85); align-items: center; justify-content: center; gap: 10px; text-align: center; }
-  .mcard.locked .num { font-family: Michroma, sans-serif; font-size: 24px; letter-spacing: .1em; color: #3c3945; }
+  /* ═══ ПРОПУСК РЕЗИДЕНТА — переворачивается по нажатию ═══ */
+  .pass-wrap { margin: 18px 0 4px; perspective: 1300px; }
+  .pass-wrap.pop { animation: pop .9s cubic-bezier(.2,.8,.2,1); }
+  @keyframes pop { from { transform: scale(.9) rotateX(18deg); opacity: 0; } }
+  .pass { position: relative; aspect-ratio: 1.586; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.2,.8,.2,1); cursor: pointer; -webkit-user-select: none; user-select: none; }
+  .pass.flipped { transform: rotateY(180deg); }
+  .mcard { position: absolute; inset: 0; border-radius: 22px; overflow: hidden; padding: 18px 20px 17px; display: flex; flex-direction: column; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .mcard.bside { transform: rotateY(180deg); }
+  .mcard.locked { border: 1.5px dashed rgba(255,255,255,.2); background: rgba(15,14,18,.92); }
+  .mcard.locked.front { align-items: center; justify-content: center; gap: 8px; text-align: center; }
+  .mcard.locked .num { font-family: Michroma, sans-serif; font-size: 22px; letter-spacing: .1em; color: #3c3945; }
   .mcard.locked p { margin: 0; font-size: 12px; color: var(--muted); }
   .mcard.member { border: 1px solid rgba(176,102,255,.6); background: radial-gradient(120% 95% at 88% 0%, #4a1f8c 0%, #24153d 32%, #18171c 62%, #0d0c10 100%); box-shadow: 0 24px 60px rgba(143,61,255,.28), inset 0 1px 0 rgba(255,255,255,.12); }
-  .mcard.member::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.13) 48%, transparent 60%); transform: translateX(-130%); animation: sheen 5.5s ease-in-out infinite; pointer-events: none; }
+  .mcard.member.bside { background: linear-gradient(160deg, #1d1729 0%, #131116 55%, #0d0c10 100%); border-color: rgba(176,102,255,.45); }
+  .mcard.member.front::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.13) 48%, transparent 60%); transform: translateX(-130%); animation: sheen 5.5s ease-in-out infinite; pointer-events: none; }
   @keyframes sheen { 0%, 55% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
   .mcard .wm { position: absolute; right: -10%; bottom: -16%; width: 72%; opacity: .1; pointer-events: none; }
-  .mcard .top { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
-  .mcard .brand { font-family: Michroma, sans-serif; font-size: 12px; letter-spacing: .16em; }
-  .mcard .tier { font-size: 10.5px; font-weight: 600; letter-spacing: .22em; color: #c7b0ea; }
-  .mcard .chipico { position: relative; width: 34px; height: 25px; margin-top: 16px; border-radius: 6px; background: linear-gradient(135deg, #d9c6ff, #8f6cc9); opacity: .85; }
-  .mcard .chipico::before { content: ""; position: absolute; inset: 5px 10px; border: 1px solid rgba(40,20,70,.45); border-radius: 3px; }
-  .mcard .no { position: relative; margin-top: auto; font-family: Michroma, sans-serif; font-size: 34px; letter-spacing: .04em; line-height: 1; text-shadow: 0 0 22px rgba(176,102,255,.55); }
-  .mcard .bot { position: relative; display: flex; justify-content: space-between; margin-top: 10px; font-size: 11.5px; color: #bdb8c9; }
-  .mcard.pop { animation: pop .9s cubic-bezier(.2,.8,.2,1); }
-  @keyframes pop { from { transform: scale(.9) rotateX(18deg); opacity: 0; } }
+  .mcard .top { position: relative; display: flex; justify-content: space-between; align-items: center; }
+  .mcard .brand { font-family: Michroma, sans-serif; font-size: 11.5px; letter-spacing: .16em; }
+  .mcard .flipico { color: rgba(255,255,255,.45); display: grid; }
+  .ptitle { position: relative; margin-top: 12px; font-size: 23px; font-weight: 300; line-height: 1.02; letter-spacing: -.01em; }
+  .ptitle .g { display: block; color: #aaa4b8; }
+  .ptitle .w { display: block; font-weight: 400; background: linear-gradient(95deg, #ffffff 0%, #e6d4ff 45%, #b27bff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 10px rgba(176,102,255,.35)); }
+  .mcard.locked .ptitle { margin-top: 0; font-size: 17px; }
+  .mcard.locked .ptitle .w { background: none; color: #6f6a7b; filter: none; }
+  .mcard .no { position: relative; margin-top: auto; font-family: Michroma, sans-serif; font-size: 30px; letter-spacing: .04em; line-height: 1; text-shadow: 0 0 22px rgba(176,102,255,.55); }
+  .mcard .bot { position: relative; display: flex; justify-content: space-between; margin-top: 9px; font-size: 11.5px; color: #bdb8c9; }
+  .mcard .stripe { position: absolute; left: 0; right: 0; top: 18px; height: 30px; background: linear-gradient(90deg, #040306, #1b1426 50%, #040306); }
+  .mcard .bgrid { position: relative; margin-top: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px 14px; }
+  .mcard .bgrid .k { display: block; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #7f7a8c; }
+  .mcard .bgrid .v { display: block; font-size: 12.5px; color: #ece9f2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mcard .bfoot { position: relative; margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+  .mcard .bfoot small { font-size: 10px; color: #7f7a8c; text-align: right; line-height: 1.35; }
+  .mcard .gives { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 7px; }
+  .mcard .gives li { display: grid; grid-template-columns: 30px 1fr; font-size: 13px; color: #dcd9e3; }
+  .mcard .gives b { font-family: Michroma, sans-serif; font-size: 11px; font-weight: 400; color: var(--violet-2); padding-top: 2px; }
+  .flip-hint { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px 0 2px; font-size: 11.5px; color: var(--muted); }
   .okdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); margin-right: 7px; vertical-align: 1px; }
   .kv a { color: #d4b3ff; text-decoration: none; }
 
@@ -394,9 +414,14 @@ const TEXTS = {
   ],
 
   // профиль
-  guestA: "Твоя", guestB: "карта",
-  guestHint: "Номер откроется после вступления",
+  guestA: "Твой", guestB: "пропуск",
+  guestHint: "Номер появится после вступления",
   memberA: "Ты", memberB: "в команде",
+  passA: "Пропуск", passB: "резидента",
+  passGives: "Что даёт пропуск",
+  passNote: "Личный пропуск<br>не передаётся",
+  flipHint: "Нажми на пропуск, чтобы перевернуть",
+  joinCta: "Получить доступ резидента",
   paidToast: "Оплата пришла — добро пожаловать",
 };
 
@@ -479,6 +504,17 @@ if (tg) { try { tg.BackButton.onClick(() => go(prevTab)); } catch (e) {} }
 const U = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || { first_name: "Максим", username: "max_k" };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fullName = [U.first_name, U.last_name].filter(Boolean).join(" ") || "Участник";
+// Декоративный штрихкод на обороте пропуска — у каждого номера свой рисунок
+function barcode(seed) {
+  let h = Number(seed) || 1, x = 0, bars = "";
+  for (let i = 0; i < 34; i++) {
+    h = (h * 9301 + 49297) % 233280;
+    const w = 1 + (h % 3);
+    if (i % 2 === 0) bars += `<rect x="${x}" y="0" width="${w}" height="24"/>`;
+    x += w + 1;
+  }
+  return `<svg width="${x}" height="24" fill="#d9d4e4" opacity=".7" aria-hidden="true">${bars}</svg>`;
+}
 function renderProfile(fresh) {
   const m = S.paid;
   const ava = $("#ava");
@@ -487,27 +523,50 @@ function renderProfile(fresh) {
   $("#pName").textContent = fullName;
   $("#pUser").textContent = U.username ? "@" + U.username : "без юзернейма";
   $("#pChip").className = "chip" + (m ? " member" : "");
-  $("#pChip").textContent = m ? "Участник" : "Гость";
+  $("#pChip").textContent = m ? "Резидент" : "Гость";
   $("#pHA").textContent = m ? TEXTS.memberA : TEXTS.guestA;
   $("#pHB").textContent = m ? TEXTS.memberB : TEXTS.guestB;
-  // Номер выдаёт бот. Если оплата только что найдена прямо в апке — номер придёт в чат кнопкой «Моя карта»
+  // Номер выдаёт бот. Если оплата только что найдена прямо в апке — номер придёт в чат кнопкой «Мой пропуск»
   const no = S.no ? "#" + S.no : "#····";
-  $("#pCard").innerHTML = m
-    ? `<div class="mcard member${fresh ? " pop" : ""}">
+  const flipIco = `<span class="flipico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-4M4 4v4h4M4 13a8 8 0 0 0 14.9 4M20 20v-4h-4"/></svg></span>`;
+  const title = `<div class="ptitle"><span class="g">${TEXTS.passA}</span><span class="w">${TEXTS.passB}</span></div>`;
+  const handle = esc(fullName) + (U.username ? " · @" + esc(U.username) : "");
+  $("#pCard").innerHTML = `<div class="pass-wrap${m && fresh ? " pop" : ""}"><div class="pass" id="pass">` + (m
+    ? `<div class="mcard member front">
          <img class="wm" src="img/logo.png" alt="">
-         <div class="top"><span class="brand">ORDO TEAM</span><span class="tier">MEMBER</span></div>
-         <div class="chipico"></div>
+         <div class="top"><span class="brand">ORDO TEAM</span>${flipIco}</div>
+         ${title}
          <div class="no">${no}</div>
-         <div class="bot"><span>${esc(fullName)}${U.username ? " · @" + esc(U.username) : ""}</span><span>с ${esc(S.date)}</span></div>
+         <div class="bot"><span>${handle}</span><span>с ${esc(S.date)}</span></div>
+       </div>
+       <div class="mcard member bside">
+         <div class="stripe"></div>
+         <div class="bgrid">
+           <div><span class="k">Резидент</span><span class="v">${esc(fullName)}</span></div>
+           <div><span class="k">Номер</span><span class="v">${no}</span></div>
+           <div><span class="k">С нами с</span><span class="v">${esc(S.date)}</span></div>
+           <div><span class="k">Доступ</span><span class="v"><span class="okdot"></span>навсегда</span></div>
+         </div>
+         <div class="bfoot">${barcode(S.no || 4827)}<small>${TEXTS.passNote}</small></div>
        </div>`
-    : `<div class="mcard locked">
-         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#85828e" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    : `<div class="mcard locked front">
+         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#85828e" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+         ${title}
          <div class="num">#————</div>
          <p>${TEXTS.guestHint}</p>
-       </div>`;
+       </div>
+       <div class="mcard locked bside">
+         <div class="top"><span class="label">${TEXTS.passGives}</span>${flipIco}</div>
+         <ul class="gives">${TEXTS.features.map((f, i) => `<li><b>0${i + 1}</b><span>${esc(f.title)}</span></li>`).join("")}</ul>
+       </div>`) +
+    `</div></div><div class="flip-hint">${flipIco}${TEXTS.flipHint}</div>`;
+  $("#pass").addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    $("#pass").classList.toggle("flipped"); haptic("medium");
+  });
   const txLink = S.tx ? ` <a href="https://tonviewer.com/transaction/${esc(S.tx)}" target="_blank">↗</a>` : "";
   $("#pRows").innerHTML = m
-    ? (S.no ? "" : `<div class="kv"><span class="k">Номер карты</span><span>придёт в чат через минуту</span></div>`) +
+    ? (S.no ? "" : `<div class="kv"><span class="k">Номер пропуска</span><span>придёт в чат через минуту</span></div>`) +
       `<div class="kv"><span class="k">Статус</span><span><span class="okdot"></span>Доступ навсегда</span></div>
        <div class="kv"><span class="k">Оплата</span><span>${esc(S.price)} USDT · ${esc(S.date.slice(0, 5))}${txLink}</span></div>
        <div class="kv"><span class="k">Код</span><span class="v">${esc(S.code)}</span></div>`
@@ -515,7 +574,7 @@ function renderProfile(fresh) {
        <div class="kv"><span class="k">Вход</span><span>${esc(S.price)} USDT · навсегда</span></div>`;
   // Участник без ссылки на группу: главная кнопка — «Написать админу», вторая прячется
   const noGroup = m && !S.group && !DEMO_UI;
-  $("#pMainT").textContent = !m ? `Вступить · ${S.price} USDT` : noGroup ? "Написать админу" : "Перейти в группу";
+  $("#pMainT").textContent = !m ? TEXTS.joinCta : noGroup ? "Написать админу" : "Перейти в группу";
   $("#pAdmin").hidden = noGroup || (!S.admin && !DEMO_UI);
   $("#pMain").hidden = noGroup && !S.admin;
 }
@@ -601,7 +660,7 @@ function markPaid() {
   applyPaidUi(); renderProfile(true); go("profile"); toast(TEXTS.paidToast);
   const sw = $("#demoSw"); if (!sw.hidden) sw.textContent = "Демо: участник ⇄";
 }
-function applyPaidUi() { $("#orbLabel").innerHTML = "Моя<br>карта"; }
+function applyPaidUi() { $("#orbLabel").innerHTML = "Мой<br>пропуск"; }
 function resetPaidUi() { $("#orbLabel").innerHTML = `${TEXTS.orbLabel}<small>${S.price} USDT</small>`; }
 if (S.paid) applyPaidUi();
 </script>
