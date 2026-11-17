@@ -333,12 +333,13 @@
   .viewas button.on { border-color: var(--violet-2); color: #e2ccff; }
   .search { width: 100%; height: 44px; margin-top: 12px; padding: 0 18px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.18); background: rgba(255,255,255,.03); color: var(--text); font: inherit; font-size: 14px; outline: none; }
   .search:focus, .fld:focus { border-color: var(--violet-2); }
-  .ulist { margin-top: 10px; display: grid; gap: 8px; }
+  .ulist { margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  #s-admin .st-head { padding-top: calc(var(--safe-top) + 72px); }
   .urow { background: var(--panel); border-radius: 18px; overflow: hidden; border: 1px solid transparent; transition: border-color .25s; }
   .urow.open { border-color: rgba(176,102,255,.45); }
   .urow .uh { width: 100%; display: flex; align-items: center; gap: 11px; padding: 11px 14px; text-align: left; }
-  .urow .ua { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--panel-2); border: 1.5px solid rgba(255,255,255,.2); color: var(--gray); font-weight: 600; }
-  .urow .ua.member { border-color: var(--violet-2); color: #e6d6ff; background: #21133a; }
+  .urow .ua, .qrow .ua { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--panel-2); border: 1.5px solid rgba(255,255,255,.2); color: var(--gray); font-weight: 600; }
+  .urow .ua.member, .qrow .ua.member { border-color: var(--violet-2); color: #e6d6ff; background: #21133a; }
   .urow .ut { flex: 1; min-width: 0; }
   .urow .ut b { display: block; font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .urow .ut span { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -363,6 +364,23 @@
   .ent:first-child { border-top: 0; }
   .ent .x { width: 30px; height: 30px; border-radius: 50%; color: var(--muted); font-size: 16px; }
   .savebar { position: fixed; z-index: 25; left: 50%; transform: translate(-50%, 140%); bottom: calc(var(--safe-bottom) + 84px); width: calc(100% - 28px); max-width: 420px; display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 18px; border-radius: 99px; background: #fff; color: #111; box-shadow: 0 10px 40px rgba(0,0,0,.6), 0 0 30px rgba(190,140,255,.35); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .3s; }
+  body.sub .savebar { bottom: calc(var(--safe-bottom) + 16px); }
+  body.sub .app { padding-bottom: calc(var(--safe-bottom) + 100px); }
+  .qrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px 9px 12px; background: var(--panel); border-radius: 16px; }
+  .qrow .ut { flex: 1; min-width: 0; }
+  .qrow .ut b { display: block; font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qrow .ut span { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qrow.filled { box-shadow: inset 0 0 0 1px rgba(176,102,255,.45); }
+  .sign { flex: none; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; font-weight: 600; line-height: 1; border: 1.5px solid rgba(61,220,151,.6); color: var(--up); }
+  .sign.neg { border-color: rgba(255,92,122,.6); color: var(--down); }
+  .qin { flex: none; width: 96px; text-align: right; font-size: 16px; font-weight: 600; }
+  .days { display: flex; gap: 6px; margin: 10px 0 4px; }
+  .days button, .days label { flex: 1; height: 38px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.16); font-size: 12px; font-weight: 600; color: var(--gray); display: grid; place-items: center; position: relative; overflow: hidden; cursor: pointer; }
+  .days .on { background: #fff; color: #111; border-color: #fff; }
+  .days input { position: absolute; inset: 0; opacity: 0; color-scheme: dark; }
+  .admtabs { display: flex; gap: 6px; margin: 18px 0 6px; }
+  .admtabs button { flex: 1; height: 40px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.16); font-size: 12.5px; font-weight: 600; color: var(--gray); }
+  .admtabs button.on { border-color: var(--violet-2); color: #fff; background: rgba(143,61,255,.22); }
   .savebar.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
   .savebar .t { flex: 1; font-size: 13px; font-weight: 600; }
   .savebar .c { height: 40px; padding: 0 14px; border-radius: 99px; font-size: 12.5px; font-weight: 600; color: #555; }
@@ -439,7 +457,10 @@
     </div>
   </section>
 
-  <!-- ═══ ЭКРАН: АНАЛИЗ (прибыль / убыль) ═══ -->
+  <!-- ═══ ЭКРАН: ПАНЕЛЬ УПРАВЛЕНИЯ (админ и модераторы, отдельная страница со стрелкой назад) ═══ -->
+  <section class="screen" id="s-admin"><div class="pad st-head" id="admBox"></div></section>
+
+  <!-- ═══ ЭКРАН: АНАЛИЗ (статистика резидента) ═══ -->
   <section class="screen" id="s-stats">
     <div class="pad st-head">
       <h2 class="duo reveal" style="font-size:34px"><span class="g" data-t="statsA"></span><span class="w" data-t="statsB"></span></h2>
@@ -497,10 +518,11 @@
         <button class="white-btn" id="pMain"><span id="pMainT"></span><span class="a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span></button>
         <button class="ghost-btn" id="pAdmin">Написать админу</button>
       </div>
-      <div id="admBox"></div>
+      <div id="admEntry"></div>
     </div>
   </section>
 </main>
+<!-- панель управления — отдельная страница -->
 <div class="savebar" id="saveBar"><span class="t" id="saveT"></span><button class="c" id="saveCancel">Отменить</button><button class="s" id="saveGo">Сохранить</button></div>
 
 <script>
@@ -552,9 +574,9 @@ const TEXTS = {
   statsLead: "Здесь будет твоя статистика",
   statsLeadData: "Твоя статистика: день, неделя, месяц и всё время",
   statsLocked: "Доступно резидентам",
-  statsLockedText: "Личная статистика: прибыль, убыль, лучшие дни и рост баланса.",
+  statsLockedText: "Личная статистика: результаты по дням, лучшие периоды и рост баланса.",
   statsEmpty: "Твой путь только начинается",
-  statsEmptyText: "Скоро здесь появятся твои прибыль, убыль и рост баланса — по дням, неделям и месяцам.",
+  statsEmptyText: "Скоро здесь появится твоя статистика и рост баланса — по дням, неделям и месяцам.",
   statsNote: "ORDO TEAM · личная статистика резидента",
   // отсчёт на Главной — старт курса 10 января 2027, 00:00 по Москве
   startAt: "2027-01-10T00:00:00+03:00",
@@ -659,9 +681,10 @@ let current = "home", prevTab = "home";
 function go(name) {
   if (name === "join" && S.paid) name = "profile";
   if (name === current) return;
-  if (name !== "join") prevTab = name;
+  const SUB = name === "join" || name === "admin";
+  if (!SUB) prevTab = name;
   current = name;
-  document.body.classList.toggle("sub", name === "join");
+  document.body.classList.toggle("sub", SUB);
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === "s-" + name));
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.go === name));
   window.scrollTo({ top: 0 });
@@ -669,7 +692,7 @@ function go(name) {
   if (name === "stats") renderStats();
   updateSaveBar();
   haptic();
-  if (tg) { try { name === "join" ? tg.BackButton.show() : tg.BackButton.hide(); } catch (e) {} }
+  if (tg) { try { SUB ? tg.BackButton.show() : tg.BackButton.hide(); } catch (e) {} }
 }
 /* блоки появляются, когда до них долистали */
 const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((e) => {
@@ -790,9 +813,9 @@ renderProfile();
    ═══════════════════════════════════════════════════════════ */
 let mode = "day", histAll = false;
 const MODES = {
-  day:   { t: "День",   n: 30, cur: "Сегодня",      prev: "Вчера",           many: "дней",    chart: "Прибыль / убыль по дням" },
-  week:  { t: "Неделя", n: 12, cur: "Эта неделя",   prev: "Прошлая неделя",  many: "недель",  chart: "Прибыль / убыль по неделям" },
-  month: { t: "Месяц",  n: 12, cur: "Этот месяц",   prev: "Прошлый месяц",   many: "месяцев", chart: "Прибыль / убыль по месяцам" },
+  day:   { t: "День",   n: 30, cur: "Сегодня",      prev: "Вчера",           many: "дней",    chart: "Статистика по дням" },
+  week:  { t: "Неделя", n: 12, cur: "Эта неделя",   prev: "Прошлая неделя",  many: "недель",  chart: "Статистика по неделям" },
+  month: { t: "Месяц",  n: 12, cur: "Этот месяц",   prev: "Прошлый месяц",   many: "месяцев", chart: "Статистика по месяцам" },
   all:   { t: "Общая" },
 };
 const MON = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
@@ -883,7 +906,7 @@ function statsView(list, start, m) {
         ${start != null ? `<div class="eq"><div><div class="k">Баланс</div><div class="v">${money(start + all)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div><div><div class="k">Старт</div><div class="v">${money(start)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div></div>` : ""}
       </div>
       <div class="tiles">
-        ${tile("Прибыльных дней", (nz.length ? Math.round((wins / nz.length) * 100) : 0) + "%", `${wins} из ${nz.length}`)}
+        ${tile("Дней в плюсе", (nz.length ? Math.round((wins / nz.length) * 100) : 0) + "%", `${wins} из ${nz.length}`)}
         ${tile("Средний день", nz.length ? money(all / nz.length, true) : "—", "USDT", cls(all))}
         ${tile("Лучший день", best ? money(best.v, true) : "—", best ? ddmm(best.k) : "", best ? cls(best.v) : "")}
         ${tile("Худший день", worst ? money(worst.v, true) : "—", worst ? ddmm(worst.k) : "", worst ? cls(worst.v) : "")}
@@ -999,20 +1022,37 @@ const isoOf = (ddmmyyyy) => (ddmmyyyy ? ddmmyyyy.split(".").reverse().join("-") 
 const findU = (id) => ADM.u.find((u) => u.i === id);
 const origU = (id) => ADM0.u.find((u) => u.i === id);
 
+// Кабинет: вход в панель (или подсказка, если апку открыли не той кнопкой)
+function renderAdmEntry() {
+  const b = $("#admEntry");
+  if (!ROLE) { b.innerHTML = ""; return; }
+  b.innerHTML = ADM
+    ? `<button class="ghost-btn" id="openAdm" style="margin-top:10px">⚙️ Панель управления</button>`
+    : `<div class="adm-hint" style="margin-top:26px">⚙️ <b>Панель управления</b> открывается кнопкой «⚙️ Управление» под полем ввода в чате с ботом (если её нет — отправь боту /admin).</div>`;
+  if (ADM) $("#openAdm").addEventListener("click", () => go("admin"));
+}
+let admTab = ROLE === "mod" ? "day" : "people";
+let qDay = dayKey(new Date()), qVal = {}, qSign = {};  // быстрый ввод: значения по «id|день»
+const yKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
+
 function renderAdmin() {
+  renderAdmEntry();
   const box = $("#admBox");
-  if (!ROLE) { box.innerHTML = ""; return; }
-  let h = `<div class="adm"><div class="adm-head"><h2 class="duo" style="font-size:28px"><span class="g">Панель</span><span class="w">управления</span></h2><span class="chip member">${ROLE === "admin" ? "Админ" : "Модератор"}</span></div>`;
-  if (!ADM) {
-    box.innerHTML = h + `<div class="adm-hint">Чтобы менять данные людей, открой апку кнопкой <b>«⚙️ Управление»</b> под полем ввода в чате с ботом (если её нет — отправь боту /admin). Сохранять изменения можно только оттуда.</div></div>`;
-    return;
-  }
-  h += `<div class="viewas">Смотреть апку как: ${[["real", "Я"], ["guest", "Гость"], ["member", "Резидент"]].map(([k, t]) => `<button data-va="${k}" class="${viewAs === k ? "on" : ""}">${t}</button>`).join("")}</div>
+  if (!ADM) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="adm-head"><h2 class="duo" style="font-size:30px"><span class="g">Панель</span><span class="w">управления</span></h2><span class="chip member">${ROLE === "admin" ? "Админ" : "Модератор"}</span></div>
+    <div class="admtabs"><button data-at="day" class="${admTab === "day" ? "on" : ""}">Внести за день</button><button data-at="people" class="${admTab === "people" ? "on" : ""}">Люди</button></div>
+    <div id="admBody"></div>`;
+  box.querySelectorAll("[data-at]").forEach((b) => b.addEventListener("click", () => { admTab = b.dataset.at; haptic(); renderAdmin(); }));
+  admTab === "day" ? renderDay() : renderPeople();
+}
+
+/* ── «Люди»: доступ, номера, роли, история записей ── */
+function renderPeople() {
+  $("#admBody").innerHTML = `<div class="viewas">Смотреть апку как: ${[["real", "Я"], ["guest", "Гость"], ["member", "Резидент"]].map(([k, t]) => `<button data-va="${k}" class="${viewAs === k ? "on" : ""}">${t}</button>`).join("")}</div>
     <input class="search" id="admSearch" placeholder="Поиск: имя, @ник или номер пропуска" value="${esc(admQ)}" autocomplete="off">
-    <div class="label" style="margin-top:16px">Люди · ${ADM.u.length}${ROLE === "mod" ? " · можешь вносить прибыль и убыль" : ""}</div>
-    <div class="ulist" id="ulist"></div></div>`;
-  box.innerHTML = h;
-  box.querySelectorAll("[data-va]").forEach((b) => b.addEventListener("click", () => {
+    <div class="label" style="margin-top:16px">Люди · ${ADM.u.length}</div>
+    <div class="ulist" id="ulist"></div>`;
+  $("#admBody").querySelectorAll("[data-va]").forEach((b) => b.addEventListener("click", () => {
     viewAs = b.dataset.va; S.paid = viewAs === "real" ? REAL_PAID : viewAs === "member";
     S.paid ? applyPaidUi() : resetPaidUi(); renderProfile(); renderAdmin(); haptic();
     toast(viewAs === "real" ? "Как есть" : "Только на твоём экране");
@@ -1020,6 +1060,59 @@ function renderAdmin() {
   $("#admSearch").addEventListener("input", (e) => { admQ = e.target.value; renderUlist(); });
   $("#ulist").addEventListener("click", onListClick);
   renderUlist();
+}
+
+/* ── «Внести за день»: выбрал дату → у каждого резидента вписал сумму → «Сохранить» ── */
+function renderDay() {
+  const res = ADM.u.filter((u) => u.p).sort((a, b) => (a.n || a.un || "").localeCompare(b.n || b.un || ""));
+  const other = qDay !== dayKey(new Date()) && qDay !== yKey();
+  const qq = admQ.trim().toLowerCase().replace(/^[@#]/, "");
+  const list = res.filter((u) => !qq || (u.n || "").toLowerCase().includes(qq) || (u.un || "").toLowerCase().includes(qq) || String(u.no || "").includes(qq));
+  $("#admBody").innerHTML = `
+    <div class="days">
+      <button data-day="${dayKey(new Date())}" class="${qDay === dayKey(new Date()) ? "on" : ""}">Сегодня</button>
+      <button data-day="${yKey()}" class="${qDay === yKey() ? "on" : ""}">Вчера</button>
+      <label class="${other ? "on" : ""}">${other ? ddmm(qDay) + "." + qDay.slice(0, 4) : "Другой день"}<input type="date" id="qDate" value="${qDay.slice(0, 4)}-${qDay.slice(4, 6)}-${qDay.slice(6, 8)}"></label>
+    </div>
+    <p class="small" style="margin:8px 0 0">Впиши сумму за день каждому. <b style="color:var(--up)">+</b> / <b style="color:var(--down)">−</b> — нажми, чтобы сменить знак. Пустые строки пропускаются.</p>
+    ${res.length > 6 ? `<input class="search" id="qSearch" placeholder="Поиск резидента" value="${esc(admQ)}" autocomplete="off">` : ""}
+    <div class="ulist" id="qlist">${list.map((u) => {
+      const key = u.i + "|" + qDay, neg = qSign[key] === -1, v = qVal[key] || "";
+      const had = u.e.filter((e) => e[1] === qDay).reduce((a, e) => a + e[2], 0);
+      return `<div class="qrow${v ? " filled" : ""}" data-u="${u.i}">
+        <span class="ua member">${esc((u.n || u.un || "?")[0].toUpperCase())}</span>
+        <span class="ut"><b>${esc(u.n || (u.un ? "@" + u.un : "ID " + u.i))}</b><span>#${u.no || "····"}${had ? ` · уже за день: <i class="${cls(had)}" style="font-style:normal">${money(had, true)}</i>` : ""}</span></span>
+        <button class="sign${neg ? " neg" : ""}" data-sign>${neg ? "−" : "+"}</button>
+        <input class="fld qin" inputmode="decimal" placeholder="0" value="${esc(v)}" enterkeyhint="next">
+      </div>`;
+    }).join("") || `<div class="empty" style="margin-top:6px">${res.length ? "Никого не нашли" : "Пока нет резидентов. Выдать доступ можно во вкладке «Люди»."}</div>`}</div>`;
+  $("#admBody").querySelectorAll("[data-day]").forEach((b) => b.addEventListener("click", () => { qDay = b.dataset.day; haptic(); renderDay(); }));
+  $("#qDate").addEventListener("change", (e) => { if (e.target.value) { qDay = e.target.value.replace(/-/g, ""); renderDay(); } });
+  const qs = $("#qSearch"); if (qs) qs.addEventListener("input", (e) => { admQ = e.target.value; renderDay(); const n = $("#qSearch"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); });
+  const inputs = [...document.querySelectorAll(".qin")];
+  inputs.forEach((inp, i) => {
+    const row = inp.closest(".qrow"), id = +row.dataset.u, key = id + "|" + qDay;
+    inp.addEventListener("input", () => {
+      let t = inp.value.replace(",", ".").replace(/[^\d.\-]/g, "");
+      if (t.startsWith("-")) { qSign[key] = -1; t = t.slice(1); row.querySelector(".sign").classList.add("neg"); row.querySelector(".sign").textContent = "−"; }
+      if (t !== inp.value) inp.value = t;
+      qVal[key] = t; syncQuick(id); row.classList.toggle("filled", !!t);
+    });
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); (inputs[i + 1] || inp).focus(); if (!inputs[i + 1]) inp.blur(); } });
+    row.querySelector("[data-sign]").addEventListener("click", (e) => {
+      qSign[key] = qSign[key] === -1 ? 1 : -1;
+      e.currentTarget.classList.toggle("neg", qSign[key] === -1); e.currentTarget.textContent = qSign[key] === -1 ? "−" : "+";
+      haptic(); syncQuick(id);
+    });
+  });
+}
+// одна строка быстрого ввода = одна запись «add» в списке изменений
+function syncQuick(id) {
+  const key = id + "|" + qDay, tmp = "q" + key;
+  OPS = OPS.filter((x) => x.tmp !== tmp);
+  const amt = parseFloat(qVal[key]);
+  if (amt > 0) OPS.push({ o: "add", u: id, d: qDay, a: Math.round((qSign[key] === -1 ? -amt : amt) * 100) / 100, tmp });
+  updateSaveBar();
 }
 function changedU(id) { return OPS.some((o) => o.u === id || (o.o === "del" && o.uid === id)); }
 function renderUlist() {
@@ -1119,9 +1212,9 @@ function addOp(op) {
 function updateSaveBar() {
   const n = OPS.length;
   $("#saveT").textContent = n + " " + (n % 10 === 1 && n % 100 !== 11 ? "изменение" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "изменения" : "изменений");
-  $("#saveBar").classList.toggle("show", n > 0 && current === "profile");
+  $("#saveBar").classList.toggle("show", n > 0 && current === "admin");
 }
-$("#saveCancel").addEventListener("click", () => { ADM = clone(ADM0); OPS = []; haptic(); updateSaveBar(); renderUlist(); });
+$("#saveCancel").addEventListener("click", () => { ADM = clone(ADM0); OPS = []; qVal = {}; qSign = {}; haptic(); updateSaveBar(); renderAdmin(); });
 $("#saveGo").addEventListener("click", () => {
   const data = JSON.stringify({ v: 1, ops: OPS.map(({ tmp, uid, ...o }) => o) });
   if (data.length > 4000) return toast("Слишком много изменений сразу — сохрани часть");
@@ -1129,10 +1222,11 @@ $("#saveGo").addEventListener("click", () => {
   if (tg && FROM_KB && tg.initData) {
     try { tg.sendData(data); return; } catch (e) { return toast("Открой панель кнопкой «⚙️ Управление» в чате"); }
   }
-  if (DEMO_UI) { console.log("Демо, ушло бы боту:", data); ADM0 = clone(ADM); OPS = []; updateSaveBar(); renderUlist(); return toast("Демо: изменения ушли бы боту"); }
+  if (DEMO_UI) { console.log("Демо, ушло бы боту:", data); ADM0 = clone(ADM); OPS = []; qVal = {}; qSign = {}; updateSaveBar(); renderAdmin(); return toast("Демо: изменения ушли бы боту"); }
   toast("Сохранять можно только из кнопки «⚙️ Управление» в чате");
 });
 renderAdmin();
+if (FROM_KB && ADM) { prevTab = "profile"; go("admin"); }  // открыли кнопкой «⚙️ Управление» — сразу в панель
 
 /* ── демо-переключатель (только в демо в обычном браузере, в Telegram его не видно) ── */
 if (DEMO_UI) {
