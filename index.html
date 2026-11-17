@@ -362,6 +362,14 @@
   .sbtn.okb { border-color: var(--violet-2); color: #e2ccff; width: 100%; }
   .ent { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
   .ent:first-child { border-top: 0; }
+  .ents { max-height: 340px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .ent .x { flex: none; }
+  .ent-ed .line2 > * { min-width: 0; }
+  .ent-ed .fld { width: 100%; }
+  .ent-ed .sign { flex: none; }
+  .ent-ed .sbtn { flex: none; padding: 0 12px; }
+  .ent-ed .line2 .sbtn[data-ecancel], .ent-ed .line2 .sbtn.danger { flex: 1; width: auto; }
+  .ent-ed { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px; margin: 6px 0; border-radius: 14px; background: #121116; border: 1px solid rgba(176,102,255,.45); }
   .ent .x { width: 30px; height: 30px; border-radius: 50%; color: var(--muted); font-size: 16px; }
   .savebar { position: fixed; z-index: 25; left: 50%; transform: translate(-50%, 140%); bottom: calc(var(--safe-bottom) + 84px); width: calc(100% - 28px); max-width: 420px; display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 18px; border-radius: 99px; background: #fff; color: #111; box-shadow: 0 10px 40px rgba(0,0,0,.6), 0 0 30px rgba(190,140,255,.35); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .3s; }
   body.sub .savebar { bottom: calc(var(--safe-bottom) + 16px); }
@@ -1123,6 +1131,8 @@ function syncQuick(id) {
   if (amt > 0) OPS.push({ o: "add", u: id, d: qDay, a: Math.round((qSign[key] === -1 ? -amt : amt) * 100) / 100, tmp });
   updateSaveBar();
 }
+let editId = null, editNeg = false;
+const isEdited = (id) => OPS.some((x) => (x.o === "edit" && String(x.id) === String(id)) || x.tmp === id);
 function changedU(id) { return OPS.some((o) => o.u === id || (o.o === "del" && o.uid === id)); }
 function renderUlist() {
   const qq = admQ.trim().toLowerCase().replace(/^[@#]/, "");
@@ -1153,8 +1163,15 @@ function detailHtml(u) {
     <div class="line2"><input class="fld" id="fStart" inputmode="decimal" placeholder="Стартовый баланс, USDT" value="${u.s ?? ""}"><button class="sbtn" data-a="start">OK</button></div>
     <div class="line2"><input class="fld" id="fDay" type="date" value="${isoOf(ddmm(ADM.t) + "." + ADM.t.slice(0, 4))}"><input class="fld" id="fAmt" inputmode="decimal" placeholder="Сумма, USDT"></div>
     <div class="line2"><button class="sbtn up" style="flex:1" data-a="plus">+ Прибыль</button><button class="sbtn down" style="flex:1" data-a="minus">− Убыль</button></div>
-    <div>${u.e.map(([id, k, v]) => `<div class="ent"><span>${ddmm(k)}.${k.slice(0, 4)}</span><span class="${cls(v)}" style="margin-left:auto;margin-right:10px;font-weight:600">${money(v, true)}</span><button class="x" data-del="${id}" aria-label="Удалить">×</button></div>`).join("") || `<div class="small">Записей пока нет</div>`}
-    ${u.pc > u.e.length ? `<div class="small">Показаны последние ${u.e.length} из ${u.pc}</div>` : ""}</div>`;
+    <div class="sec">Все записи · ${u.pc}</div>
+    <div class="ents">${u.e.map(([id, k, v]) => String(editId) === String(id)
+      ? `<div class="ent-ed" data-eid="${id}">
+           <input class="fld" type="date" id="eDate" value="${k.slice(0, 4)}-${k.slice(4, 6)}-${k.slice(6, 8)}">
+           <div class="line2"><button class="sign${editNeg ? " neg" : ""}" data-esign>${editNeg ? "−" : "+"}</button><input class="fld" id="eAmt" inputmode="decimal" value="${Math.abs(v)}"><button class="sbtn okb" style="width:auto" data-esave="${id}">Готово</button></div>
+           <div class="line2"><button class="sbtn" style="flex:1" data-ecancel>Отмена</button><button class="sbtn danger" style="flex:1" data-del="${id}">Удалить запись</button></div>
+         </div>`
+      : `<div class="ent${isEdited(id) ? " edited" : ""}"><span>${ddmm(k)}.${k.slice(0, 4)}${isEdited(id) ? ' <span class="badge ch">ИЗМ.</span>' : ""}</span><span class="${cls(v)}" style="margin-left:auto;margin-right:6px;font-weight:600">${money(v, true)}</span><button class="x" data-edit="${id}" aria-label="Изменить">✎</button><button class="x" data-del="${id}" aria-label="Удалить">×</button></div>`).join("") || `<div class="small">Записей пока нет</div>`}</div>
+    ${u.pc > u.e.length ? `<div class="small">Показаны последние ${u.e.length} из ${u.pc} — старые не влезли в кнопку</div>` : ""}</div>`;
   return h + `</div>`;
 }
 function onListClick(e) {
@@ -1162,7 +1179,22 @@ function onListClick(e) {
   const id = +row.dataset.u, u = findU(id);
   if (e.target.closest(".uh")) { openId = openId === id ? null : id; haptic(); renderUlist(); return; }
   const del = e.target.closest("[data-del]");
-  if (del) return addOp({ o: "del", id: del.dataset.del, uid: id });
+  if (del) { editId = null; return addOp({ o: "del", id: del.dataset.del, uid: id }); }
+  // изменение записи: ✎ → поля даты и суммы → «Готово»
+  const ed = e.target.closest("[data-edit]");
+  if (ed) { editId = ed.dataset.edit; const en = u.e.find((x) => String(x[0]) === editId); editNeg = en && en[2] < 0; haptic(); renderUlist(); return; }
+  if (e.target.closest("[data-ecancel]")) { editId = null; renderUlist(); return; }
+  const es = e.target.closest("[data-esign]");
+  if (es) { editNeg = !editNeg; es.classList.toggle("neg", editNeg); es.textContent = editNeg ? "−" : "+"; haptic(); return; }
+  const sv = e.target.closest("[data-esave]");
+  if (sv) {
+    const amt = Math.abs(parseFloat((row.querySelector("#eAmt").value || "").replace(",", ".")));
+    const d = (row.querySelector("#eDate").value || "").replace(/-/g, "");
+    if (!(amt > 0)) return toast("Впиши сумму");
+    if (!/^\d{8}$/.test(d)) return toast("Выбери дату");
+    editId = null;
+    return addOp({ o: "edit", id: sv.dataset.esave, uid: id, d, a: Math.round((editNeg ? -amt : amt) * 100) / 100 });
+  }
   const a = e.target.closest("[data-a]"); if (!a) return;
   const act = a.dataset.a, val = (sel) => (row.querySelector(sel) || {}).value || "";
   if (act === "grant" || act === "revoke") return addOp({ o: act, u: id });
@@ -1209,11 +1241,20 @@ function addOp(op) {
     op.tmp = "t" + ++tmpId; OPS.push(op);
     u.e.unshift([op.tmp, op.d, op.a]); u.pt = Math.round((u.pt + op.a) * 100) / 100; u.pc++;
     toast((op.a > 0 ? "+" : "−") + Math.abs(op.a) + " USDT — нажми «Сохранить»");
+  } else if (op.o === "edit") {
+    const idx = u.e.findIndex((x) => String(x[0]) === String(op.id)); if (idx < 0) return;
+    const old = u.e[idx];
+    u.e[idx] = [old[0], op.d, op.a];
+    u.e.sort((a, b) => (a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0));
+    u.pt = Math.round((u.pt - old[2] + op.a) * 100) / 100;
+    if (String(op.id).startsWith("t")) { const add = OPS.find((x) => x.tmp === op.id); if (add) { add.d = op.d; add.a = op.a; } }
+    else { OPS = OPS.filter((x) => !(x.o === "edit" && x.id === +op.id)); OPS.push({ o: "edit", id: +op.id, d: op.d, a: op.a, uid: op.uid }); }
+    toast("Запись изменена — нажми «Сохранить»");
   } else if (op.o === "del") {
     const idx = u.e.findIndex((x) => String(x[0]) === String(op.id)); if (idx < 0) return;
     const [, , v] = u.e.splice(idx, 1)[0];
     if (String(op.id).startsWith("t")) OPS = OPS.filter((x) => x.tmp !== op.id);
-    else OPS.push({ o: "del", id: +op.id, uid: op.uid });
+    else { OPS = OPS.filter((x) => !(x.o === "edit" && x.id === +op.id)); OPS.push({ o: "del", id: +op.id, uid: op.uid }); }
     u.pt = Math.round((u.pt - v) * 100) / 100; u.pc--;
   }
   haptic(); updateSaveBar(); renderUlist();
