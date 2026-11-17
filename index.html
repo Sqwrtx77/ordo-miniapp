@@ -249,12 +249,17 @@
   .kv:last-child { padding-bottom: 15px; }
 
   /* ═══ ГЛАВНАЯ: плашка-отсчёт до старта ═══ */
-  .cd { position: absolute; z-index: 3; top: calc(var(--safe-top) + 14px); left: 16px; min-width: 168px; padding: 9px 14px 8px; border-radius: 16px; border-width: 1px; border-color: rgba(176,102,255,.55); box-shadow: 0 6px 24px rgba(0,0,0,.45), 0 0 22px rgba(143,61,255,.25); }
+  /* плашка во всю ширину над картинкой — не перекрывает фигуру */
+  .cd { position: relative; z-index: 3; margin: calc(var(--safe-top) + 14px) 16px 4px; padding: 12px 18px 10px; border-radius: 18px; border-width: 1px; border-color: rgba(176,102,255,.55); box-shadow: 0 6px 24px rgba(0,0,0,.45), 0 0 26px rgba(143,61,255,.22); display: grid; grid-template-columns: 1fr auto; align-items: center; row-gap: 2px; }
+  .cd .cd-top { grid-column: 1; grid-row: 1 / span 2; }
+  .cd .cd-num { grid-column: 2; grid-row: 1; margin-top: 0; justify-content: flex-end; }
+  .cd .cd-num span:last-child { margin-right: 0; }
+  .cd .cd-date { grid-column: 2; grid-row: 2; text-align: right; margin-top: 1px; }
   .cd-top { display: flex; align-items: center; font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #cbb7ec; }
   .cd-top .okdot { width: 6px; height: 6px; margin-right: 7px; background: var(--violet-2); box-shadow: 0 0 8px var(--violet-2); animation: breathe-dot 2s ease-in-out infinite; }
   @keyframes breathe-dot { 50% { opacity: .35; } }
   .cd-num { margin-top: 4px; display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
-  .cd-num b { font-family: Michroma, sans-serif; font-weight: 400; font-size: 19px; line-height: 1.1; text-shadow: 0 0 14px rgba(176,102,255,.6); }
+  .cd-num b { font-family: Michroma, sans-serif; font-weight: 400; font-size: 22px; line-height: 1.1; text-shadow: 0 0 14px rgba(176,102,255,.6); }
   .cd-num span { font-size: 11.5px; color: var(--gray); margin-right: 6px; }
   .cd-date { margin-top: 2px; text-align: right; font-size: 10.5px; color: var(--muted); }
 
@@ -430,12 +435,12 @@
 
   <!-- ═══ ЭКРАН 1: КЛУБ ═══ -->
   <section class="screen active" id="s-home">
+    <div class="cd glass" id="countdown">
+      <div class="cd-top"><span class="okdot"></span><span id="cdLabel"></span></div>
+      <div class="cd-num" id="cdNum"></div>
+      <div class="cd-date" id="cdDate"></div>
+    </div>
     <div class="hero">
-      <div class="cd glass" id="countdown">
-        <div class="cd-top"><span class="okdot"></span><span id="cdLabel"></span></div>
-        <div class="cd-num" id="cdNum"></div>
-        <div class="cd-date" id="cdDate"></div>
-      </div>
       <img src="img/hero.jpg" alt="ORDO TEAM">
       <button class="orb" id="orbBtn"><span id="orbLabel"></span></button>
       <button class="scroll" id="scrollBtn">
