@@ -333,6 +333,33 @@
   .empty { margin-top: 26px; padding: 34px 22px; text-align: center; border: 1.5px dashed rgba(255,255,255,.16); border-radius: 22px; color: var(--muted); font-size: 13.5px; }
   .empty b { display: block; color: var(--text); font-weight: 500; font-size: 16px; margin-bottom: 6px; }
 
+  /* ═══ ROADMAP — граф тем, как в Obsidian: в центре ты, вокруг темы курса ═══ */
+  #roadmap { margin-top: 44px; }
+  .rm { position: relative; width: 100%; aspect-ratio: 1 / 1.02; margin-top: 8px; border-radius: 26px; overflow: hidden;
+    background: radial-gradient(55% 50% at 50% 50%, rgba(143,61,255,.2), transparent 70%), var(--panel); border: 1px solid rgba(176,102,255,.2); }
+  .rm svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .rm .edge { stroke: rgba(176,102,255,.55); stroke-width: 1.4; stroke-dasharray: 2 4; animation: flow 6s linear infinite; }
+  .rm .ring { stroke: rgba(255,255,255,.08); stroke-width: 1; }
+  @keyframes flow { to { stroke-dashoffset: -60; } }
+  .rm-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; width: 92px; text-align: center; animation: drift 6s ease-in-out infinite; }
+  @keyframes drift { 50% { margin-top: -4px; } }
+  .rm-dot { position: relative; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--violet-2) calc(var(--p) * 1%), rgba(255,255,255,.1) 0); box-shadow: 0 0 18px rgba(143,61,255,.35); transition: transform .2s; }
+  .rm-dot::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #16131d; }
+  .rm-dot b { position: relative; font-family: Michroma, sans-serif; font-weight: 400; font-size: 10.5px; color: #d9c8f5; }
+  .rm-node:active .rm-dot { transform: scale(.92); }
+  .rm-node span { font-size: 11px; line-height: 1.2; color: #cfcbd8; text-shadow: 0 1px 4px #000; }
+  .rm-core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+    background: #21133a; border: 2px solid var(--violet-2); box-shadow: 0 0 0 10px rgba(143,61,255,.12), 0 0 40px rgba(143,61,255,.7); animation: breathe-core 3.5s ease-in-out infinite; }
+  .rm-core img { width: 100%; height: 100%; object-fit: cover; }
+  .rm-core i { font-style: normal; font-size: 28px; font-weight: 500; color: #ecdcff; }
+  @keyframes breathe-core { 50% { box-shadow: 0 0 0 16px rgba(143,61,255,.08), 0 0 60px rgba(143,61,255,.9); } }
+  .rm-total { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+  .rm-dot small, .rm-total small { font-family: Inter, sans-serif; font-size: .9em; font-weight: 500; margin-left: 1px; }
+  .rm-total b { font-family: Michroma, sans-serif; font-weight: 400; color: #fff; }
+  .rm-bar { height: 4px; border-radius: 4px; margin-top: 8px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .rm-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), var(--violet-2)); box-shadow: 0 0 10px var(--violet-2); }
+
   /* ═══ ПАНЕЛЬ УПРАВЛЕНИЯ ═══ */
   .adm { margin-top: 38px; }
   .adm-head { display: flex; align-items: center; justify-content: space-between; }
@@ -535,6 +562,7 @@
         <button class="white-btn" id="pMain"><span id="pMainT"></span><span class="a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span></button>
         <button class="ghost-btn" id="pAdmin">Написать админу</button>
       </div>
+      <div id="roadmap" class="reveal"></div>
       <div id="admEntry"></div>
     </div>
   </section>
@@ -598,7 +626,13 @@ const TEXTS = {
   statsNote: "ORDO TEAM · личная статистика резидента",
   // отсчёт на Главной — старт курса 10 января 2027, 00:00 по Москве
   startAt: "2027-01-10T00:00:00+03:00",
-  cdLabel: "До старта",
+  cdLabel: "Старт через:",
+  // RoadMap в кабинете: темы курса (черновые названия — поменяем на настоящие). p — сколько % пройдено (пока 0)
+  roadmapLead: "Твой путь по темам курса. Прогресс начнёт заполняться после старта.",
+  roadmap: [
+    { t: "Основы", p: 0 }, { t: "Мышление", p: 0 }, { t: "Инструменты", p: 0 }, { t: "Стратегия", p: 0 },
+    { t: "Риск-менеджмент", p: 0 }, { t: "Практика", p: 0 }, { t: "Своё дело", p: 0 },
+  ],
   cdDate: "10 января 2027",
   cdDone: "Мы стартовали",
 };
@@ -811,6 +845,29 @@ function renderProfile(fresh) {
   $("#pAdmin").hidden = noGroup || (!S.admin && !DEMO_UI);
   $("#pMain").hidden = noGroup && !S.admin;
 }
+/* ── RoadMap: граф тем вокруг тебя (пока только визуал, без трекинга) ── */
+function renderRoadmap() {
+  const items = TEXTS.roadmap, n = items.length, R = 36;
+  const pts = items.map((_, i) => { const a = (-90 + (360 / n) * i) * Math.PI / 180; return [50 + R * Math.cos(a), 50 + R * 1.02 * Math.sin(a)]; });
+  const total = Math.round(items.reduce((a, x) => a + (x.p || 0), 0) / n);
+  $("#roadmap").innerHTML = `
+    <h2 class="duo" style="font-size:30px"><span class="g">Road</span><span class="w">Map</span></h2>
+    <div class="vline"></div>
+    <p class="small" style="margin:0">${TEXTS.roadmapLead}</p>
+    <div class="rm">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        ${pts.map(([x, y], i) => { const [x2, y2] = pts[(i + 1) % n]; return `<line class="ring" x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" vector-effect="non-scaling-stroke"/>`; }).join("")}
+        ${pts.map(([x, y]) => `<line class="edge" x1="50" y1="50" x2="${x}" y2="${y}" vector-effect="non-scaling-stroke"/>`).join("")}
+      </svg>
+      <div class="rm-core">${U.photo_url ? `<img src="${esc(U.photo_url)}" alt="">` : `<i>${esc(fullName[0].toUpperCase())}</i>`}</div>
+      ${items.map((it, i) => `<button class="rm-node" style="left:${pts[i][0]}%;top:${pts[i][1]}%;animation-delay:${(i * .8).toFixed(1)}s" data-rm="${i}">
+        <span class="rm-dot" style="--p:${it.p || 0}"><b>${it.p || 0}<small>%</small></b></span><span>${esc(it.t)}</span></button>`).join("")}
+    </div>
+    <div class="rm-total"><span>Пройдено всего</span><b>${total}<small>%</small></b></div>
+    <div class="rm-bar"><i style="width:${total}%"></i></div>`;
+  $("#roadmap").querySelectorAll("[data-rm]").forEach((b) => b.addEventListener("click", () => { haptic(); toast(`«${items[+b.dataset.rm].t}» откроется после старта`); }));
+}
+
 /* ── числа ── */
 const money = (v, sign) => (sign && v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const cls = (v) => (v > 0 ? "up" : v < 0 ? "down" : "");
@@ -828,6 +885,7 @@ $("#pMain").addEventListener("click", () => {
 });
 $("#pAdmin").addEventListener("click", openAdmin);
 renderProfile();
+renderRoadmap();
 
 /* ═══════════════════════════════════════════════════════════
    АНАЛИЗ — прибыль и убыль (как в Bybit), данные вносят модераторы.
@@ -836,7 +894,7 @@ renderProfile();
 // ── Валюта: USDT или рубли. Курс USDT→RUB берём раз в день (tonapi, запасной — ЦБ РФ по доллару) ──
 let CURR = (() => { try { return localStorage.getItem("ordo_cur") || "USDT"; } catch (e) { return "USDT"; } })();
 let RUB = null;  // { rate, ts, cbr? }
-const CUR = () => (CURR === "RUB" && RUB ? "₽" : "USDT");
+const CUR = () => (CURR === "RUB" && RUB ? "₽" : "USD");  // показываем «USD» (1 USDT = 1 $)
 const cm = (v, sign) => (CURR === "RUB" && RUB
   ? (sign && v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v * RUB.rate)).toLocaleString("ru-RU")
   : money(v, sign));
@@ -858,8 +916,8 @@ async function loadRub() {
 }
 loadRub();
 function curHtml() {
-  return `<div class="curbar"><span class="small" style="margin-right:auto">${RUB ? `1 USDT ≈ ${RUB.rate.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽` : "Загружаем курс…"}</span>
-    <div class="curs"><button data-cur="USDT" class="${CUR() === "USDT" ? "on" : ""}">USDT</button><button data-cur="RUB" class="${CUR() === "₽" ? "on" : ""}" ${RUB ? "" : "disabled"}>₽</button></div></div>`;
+  return `<div class="curbar"><span class="small" style="margin-right:auto">${RUB ? `1 USD ≈ ${RUB.rate.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽` : "Загружаем курс…"}</span>
+    <div class="curs"><button data-cur="USDT" class="${CUR() === "USD" ? "on" : ""}">USD</button><button data-cur="RUB" class="${CUR() === "₽" ? "on" : ""}" ${RUB ? "" : "disabled"}>₽</button></div></div>`;
 }
 let mode = "day", histAll = false;
 const MODES = {
@@ -963,8 +1021,6 @@ function statsView(list, start, m) {
       <div class="tiles">
         ${start > 0 ? tile("ROI", roiTxt((all / start) * 100), "от стартового баланса", cls(all)) : tile("Общий PnL", cm(all, true), CUR(), cls(all))}
         ${tile("Средний PnL", nz.length ? cm(all / nz.length, true) : "—", "в день, " + CUR(), cls(all))}
-        ${tile("Серия в плюсе", streakTxt(streak(nz.map((x) => x.v)), "day"), "лучшая подряд")}
-        ${tile("Торговых дней", String(nz.length), "с " + ddmm(list[0].k))}
       </div>
       ${histHtml(mon.starts.map((d, i) => [unitLabel(d, "month", true), mon.vals[i]]).filter((r) => r[1]).reverse())}`;
     return { html, n: cum.length, line: true, tip: (i) => `${ddmm(days[i])} · <b class="${cls(daily[i])}">${cm(daily[i], true)}</b> · итог ${cm(cum[i], true)}` };
@@ -989,8 +1045,6 @@ function statsView(list, start, m) {
       ${(() => { const b0 = start != null ? start + sumBefore(list, s.keys[0]) : 0;
         return b0 > 0 ? tile("ROI", roiTxt((tot / b0) * 100), "за этот период", cls(tot))
           : tile("Средний PnL", nz.length ? cm(tot / nz.length, true) : "—", { day: "в день", week: "в неделю", month: "в месяц" }[m] + ", " + CUR(), cls(tot)); })()}
-      ${tile("Серия в плюсе", streakTxt(streak(s.vals), m), "лучшая подряд")}
-      ${tile({ day: "Торговых дней", week: "Активных недель", month: "Активных месяцев" }[m], String(nz.length), "из последних " + n)}
     </div>
     ${histHtml(s.starts.map((d, i) => [unitLabel(d, m, true), s.vals[i]]).filter((r) => r[1]).reverse())}`;
   return { html, n, line: false, tip: (i) => `${unitLabel(s.starts[i], m, true)} · <b class="${cls(s.vals[i])}">${cm(s.vals[i], true)}</b>` };
@@ -1189,7 +1243,7 @@ function renderUlist() {
     return `<div class="urow${openId === u.i ? " open" : ""}" data-u="${u.i}">
       <button class="uh"><span class="ua${u.p ? " member" : ""}">${esc((u.n || u.un || "?")[0].toUpperCase())}</span>
         <span class="ut"><b>${name}${badge}${changedU(u.i) ? '<span class="badge ch">ИЗМ.</span>' : ""}</b><span>${u.un ? "@" + esc(u.un) + " · " : ""}${u.p ? "Резидент #" + (u.no || "····") : "Гость"}</span></span>
-        <span class="ur ${cls(u.pt)}">${u.pc ? money(u.pt, true) : "—"}<small>${u.pc ? "USDT · " + u.pc + " зап." : "нет PnL"}</small></span></button>
+        <span class="ur ${cls(u.pt)}">${u.pc ? money(u.pt, true) : "—"}<small>${u.pc ? "USD · " + u.pc + " зап." : "нет PnL"}</small></span></button>
       ${openId === u.i ? detailHtml(u) : ""}</div>`;
   }).join("") || `<div class="empty" style="margin-top:6px">Никого не нашли</div>`;
 }
@@ -1206,8 +1260,8 @@ function detailHtml(u) {
     if (!u.adm) h += `<div class="sec">Роль</div><button class="sbtn ${u.mod ? "danger" : "okb"}" data-a="mod">${u.mod ? "Снять модератора" : "Сделать модератором"}</button>`;
   }
   h += `<div class="sec">Прибыль / убыль</div>
-    <div class="line2"><input class="fld" id="fStart" inputmode="decimal" placeholder="Стартовый баланс, USDT" value="${u.s ?? ""}"><button class="sbtn" data-a="start">OK</button></div>
-    <div class="line2"><input class="fld" id="fDay" type="date" value="${isoOf(ddmm(ADM.t) + "." + ADM.t.slice(0, 4))}"><input class="fld" id="fAmt" inputmode="decimal" placeholder="Сумма, USDT"></div>
+    <div class="line2"><input class="fld" id="fStart" inputmode="decimal" placeholder="Стартовый баланс, USD" value="${u.s ?? ""}"><button class="sbtn" data-a="start">OK</button></div>
+    <div class="line2"><input class="fld" id="fDay" type="date" value="${isoOf(ddmm(ADM.t) + "." + ADM.t.slice(0, 4))}"><input class="fld" id="fAmt" inputmode="decimal" placeholder="Сумма, USD"></div>
     <div class="line2"><button class="sbtn up" style="flex:1" data-a="plus">+ Прибыль</button><button class="sbtn down" style="flex:1" data-a="minus">− Убыль</button></div>
     <div class="sec">Все записи · ${u.pc}</div>
     <div class="ents">${u.e.map(([id, k, v]) => String(editId) === String(id)
@@ -1286,7 +1340,7 @@ function addOp(op) {
   } else if (op.o === "add") {
     op.tmp = "t" + ++tmpId; OPS.push(op);
     u.e.unshift([op.tmp, op.d, op.a]); u.pt = Math.round((u.pt + op.a) * 100) / 100; u.pc++;
-    toast((op.a > 0 ? "+" : "−") + Math.abs(op.a) + " USDT — нажми «Сохранить»");
+    toast((op.a > 0 ? "+" : "−") + Math.abs(op.a) + " USD — нажми «Сохранить»");
   } else if (op.o === "edit") {
     const idx = u.e.findIndex((x) => String(x[0]) === String(op.id)); if (idx < 0) return;
     const old = u.e[idx];
