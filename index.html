@@ -712,7 +712,11 @@ $("#backBtn").addEventListener("click", () => go(prevTab));
 if (tg) { try { tg.BackButton.onClick(() => go(prevTab)); } catch (e) {} }
 
 /* ── профиль ── */
-const U = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || { first_name: "Максим", username: "max_k" };
+// Имя из Telegram. Если апку открыли кнопкой «⚙️ Управление», Telegram имя не передаёт — берём его из данных бота.
+const U = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || (() => {
+  try { const a = b64json(q.get("adm")), me = a.u.find((x) => x.i === a.me); if (me) return { first_name: me.n || me.un || "ORDO", username: me.un }; } catch (e) {}
+  return DEMO_UI ? { first_name: "Максим", username: "max_k" } : { first_name: "Резидент" };
+})();
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fullName = [U.first_name, U.last_name].filter(Boolean).join(" ") || "Участник";
 // Декоративный штрихкод на обороте пропуска — у каждого номера свой рисунок
@@ -931,6 +935,7 @@ function statsView(list, start, m) {
       <div class="sub">${base > 0 ? pct((cur / base) * 100) : ""}<span>${M.prev}: <b class="${cls(prev)}">${money(prev, true)}</b></span></div>
       <div class="chart" id="chart">${barsSvg(s.vals)}<div class="tip" id="ctip"></div></div>
       <div class="axis"><span>${unitLabel(s.starts[0], m)}</span><span>${M.chart}</span><span>${unitLabel(s.starts[n - 1], m)}</span></div>
+      ${start != null ? (() => { const all = list.reduce((a, p) => a + p.v, 0); return `<div class="eq"><div><div class="k">Баланс</div><div class="v">${money(start + all)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div><div><div class="k">За всё время</div><div class="v ${cls(all)}">${money(all, true)}</div></div></div>`; })() : ""}
     </div>
     <div class="tiles">
       ${tile(`За ${n} ${M.many.replace("дней", plural(n, ["день", "дня", "дней"])).replace("недель", plural(n, ["неделю", "недели", "недель"])).replace("месяцев", plural(n, ["месяц", "месяца", "месяцев"]))}`, money(tot, true), "USDT", cls(tot))}
@@ -1223,7 +1228,7 @@ $("#saveGo").addEventListener("click", () => {
   const data = JSON.stringify({ v: 1, ops: OPS.map(({ tmp, uid, ...o }) => o) });
   if (data.length > 4000) return toast("Слишком много изменений сразу — сохрани часть");
   haptic("medium");
-  if (tg && FROM_KB && tg.initData) {
+  if (tg && FROM_KB && tg.platform !== "unknown") {
     try { tg.sendData(data); return; } catch (e) { return toast("Открой панель кнопкой «⚙️ Управление» в чате"); }
   }
   if (DEMO_UI) { console.log("Демо, ушло бы боту:", data); ADM0 = clone(ADM); OPS = []; qVal = {}; qSign = {}; updateSaveBar(); renderAdmin(); return toast("Демо: изменения ушли бы боту"); }
