@@ -274,6 +274,10 @@
   :root { --up: #3ddc97; --down: #b9a7d6; }  /* минус — спокойный сиреневый, а не красный */
   .up { color: var(--up); } .down { color: var(--down); }
   .st-head { padding-top: calc(var(--safe-top) + 34px); }
+  .curbar { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+  .curs { display: flex; padding: 3px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.16); }
+  .curs button { height: 28px; min-width: 48px; padding: 0 12px; border-radius: 99px; font-size: 12px; font-weight: 700; color: var(--gray); }
+  .curs button.on { background: var(--violet); color: #fff; box-shadow: 0 0 14px rgba(143,61,255,.55); }
   .seg { display: flex; gap: 6px; margin: 20px 0 14px; }
   .seg button { flex: 1; height: 34px; border-radius: 99px; border: 1.5px solid rgba(255,255,255,.16); font-size: 12px; font-weight: 600; color: var(--gray); transition: .25s; }
   .seg button.on { background: #fff; color: #111; border-color: #fff; }
@@ -823,6 +827,34 @@ renderProfile();
    АНАЛИЗ — прибыль и убыль (как в Bybit), данные вносят модераторы.
    Вкладки: День · Неделя · Месяц (столбики по дням / неделям / месяцам) · Общая (рост за всё время)
    ═══════════════════════════════════════════════════════════ */
+// ── Валюта: USDT или рубли. Курс USDT→RUB берём раз в день (tonapi, запасной — ЦБ РФ по доллару) ──
+let CURR = (() => { try { return localStorage.getItem("ordo_cur") || "USDT"; } catch (e) { return "USDT"; } })();
+let RUB = null;  // { rate, ts, cbr? }
+const CUR = () => (CURR === "RUB" && RUB ? "₽" : "USDT");
+const cm = (v, sign) => (CURR === "RUB" && RUB
+  ? (sign && v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v * RUB.rate)).toLocaleString("ru-RU")
+  : money(v, sign));
+async function loadRub() {
+  let c = null; try { c = JSON.parse(localStorage.getItem("ordo_rub")); } catch (e) {}
+  if (c && c.rate > 0) RUB = c;
+  if (c && Date.now() - c.ts < 864e5) return;  // курс свежий (меньше суток) — не обновляем
+  let next = null;
+  try {
+    const j = await (await fetch(`https://tonapi.io/v2/rates?tokens=${USDT_MASTER}&currencies=rub`)).json();
+    const rate = j.rates[USDT_MASTER].prices.RUB; if (rate > 0) next = { rate, ts: Date.now() };
+  } catch (e) {}
+  if (!next) try {
+    const j = await (await fetch("https://www.cbr-xml-daily.ru/daily_json.js")).json();
+    if (j.Valute.USD.Value > 0) next = { rate: j.Valute.USD.Value, ts: Date.now(), cbr: 1 };
+  } catch (e) {}
+  if (next) { RUB = next; try { localStorage.setItem("ordo_rub", JSON.stringify(RUB)); } catch (e) {} }
+  if (current === "stats") renderStats();
+}
+loadRub();
+function curHtml() {
+  return `<div class="curbar"><span class="small" style="margin-right:auto">${RUB ? `1 USDT ≈ ${RUB.rate.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽` : "Загружаем курс…"}</span>
+    <div class="curs"><button data-cur="USDT" class="${CUR() === "USDT" ? "on" : ""}">USDT</button><button data-cur="RUB" class="${CUR() === "₽" ? "on" : ""}" ${RUB ? "" : "disabled"}>₽</button></div></div>`;
+}
 let mode = "day", histAll = false;
 const MODES = {
   day:   { t: "День",   n: 30, cur: "Сегодня",      prev: "Вчера",           many: "дней",    chart: "Статистика по дням" },
@@ -894,7 +926,7 @@ const tile = (k, v, s, c = "") => `<div class="tile"><div class="k">${k}</div><d
 function histHtml(rows) {
   const shown = histAll ? rows : rows.slice(0, 7);
   return `<div class="label" style="margin-top:28px">История</div>
-    <div class="hist">${shown.map(([l, v]) => `<div class="kv"><span class="k">${l}</span><span class="v ${cls(v)}">${money(v, true)} USDT</span></div>`).join("") || `<div class="kv"><span class="k">Здесь появится история</span></div>`}</div>
+    <div class="hist">${shown.map(([l, v]) => `<div class="kv"><span class="k">${l}</span><span class="v ${cls(v)}">${cm(v, true)} ${CUR()}</span></div>`).join("") || `<div class="kv"><span class="k">Здесь появится история</span></div>`}</div>
     ${rows.length > 7 ? `<button class="more" id="histMore">${histAll ? "Свернуть" : "Показать все · " + rows.length}</button>` : ""}`;
 }
 
@@ -915,20 +947,20 @@ function statsView(list, start, m) {
     const html = `${segHtml(m)}
       <div class="pnl-main">
         <div class="label">Общая доходность · с ${ddmm(list[0].k)}.${list[0].k.slice(0, 4)}</div>
-        <div class="big ${cls(all)}">${money(all, true)}<small>USDT</small></div>
+        <div class="big ${cls(all)}">${cm(all, true)}<small>${CUR()}</small></div>
         <div class="sub">${start > 0 ? pct((all / start) * 100) : ""}<span>за ${days.length} ${plural(days.length, ["день", "дня", "дней"])}</span></div>
         <div class="chart" id="chart">${lineSvg(cum)}<div class="tip" id="ctip"></div></div>
         <div class="axis"><span>${ddmm(days[0])}</span><span>Рост результата</span><span>${ddmm(days[days.length - 1])}</span></div>
-        ${start != null ? `<div class="eq"><div><div class="k">Баланс</div><div class="v">${money(start + all)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div><div><div class="k">Старт</div><div class="v">${money(start)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div></div>` : ""}
+        ${start != null ? `<div class="eq"><div><div class="k">Баланс</div><div class="v">${cm(start + all)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div><div><div class="k">Старт</div><div class="v">${cm(start)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div></div>` : ""}
       </div>
       <div class="tiles">
-        ${tile("Лучший день", best && best.v > 0 ? money(best.v, true) : "—", best && best.v > 0 ? ddmm(best.k) : "", "up")}
+        ${tile("Лучший день", best && best.v > 0 ? cm(best.v, true) : "—", best && best.v > 0 ? ddmm(best.k) : "", "up")}
         ${tile("Лучшая серия", streakTxt(streak(nz.map((x) => x.v)), "day"), "подряд в плюсе")}
-        ${tile("Лучший месяц", bestMon ? money(bestMon.v, true) : "—", bestMon ? unitLabel(mon.starts[bestMon.i], "month", true) : "", "up")}
+        ${tile("Лучший месяц", bestMon ? cm(bestMon.v, true) : "—", bestMon ? unitLabel(mon.starts[bestMon.i], "month", true) : "", "up")}
         ${tile("В статистике", nz.length + " " + plural(nz.length, ["день", "дня", "дней"]), "с " + ddmm(list[0].k))}
       </div>
       ${histHtml(mon.starts.map((d, i) => [unitLabel(d, "month", true), mon.vals[i]]).filter((r) => r[1]).reverse())}`;
-    return { html, n: cum.length, line: true, tip: (i) => `${ddmm(days[i])} · <b class="${cls(daily[i])}">${money(daily[i], true)}</b> · итог ${money(cum[i], true)}` };
+    return { html, n: cum.length, line: true, tip: (i) => `${ddmm(days[i])} · <b class="${cls(daily[i])}">${cm(daily[i], true)}</b> · итог ${cm(cum[i], true)}` };
   }
   const s = series(list, m, M.n), n = s.vals.length;
   const cur = s.vals[n - 1], prev = n > 1 ? s.vals[n - 2] : 0;
@@ -939,20 +971,20 @@ function statsView(list, start, m) {
   const html = `${segHtml(m)}
     <div class="pnl-main">
       <div class="label">${M.cur}</div>
-      <div class="big ${cls(cur)}">${money(cur, true)}<small>USDT</small></div>
-      <div class="sub">${base > 0 ? pct((cur / base) * 100) : ""}<span>${M.prev}: <b class="${cls(prev)}">${money(prev, true)}</b></span></div>
+      <div class="big ${cls(cur)}">${cm(cur, true)}<small>${CUR()}</small></div>
+      <div class="sub">${base > 0 ? pct((cur / base) * 100) : ""}<span>${M.prev}: <b class="${cls(prev)}">${cm(prev, true)}</b></span></div>
       <div class="chart" id="chart">${barsSvg(s.vals)}<div class="tip" id="ctip"></div></div>
       <div class="axis"><span>${unitLabel(s.starts[0], m)}</span><span>${M.chart}</span><span>${unitLabel(s.starts[n - 1], m)}</span></div>
-      ${start != null ? (() => { const all = list.reduce((a, p) => a + p.v, 0); return `<div class="eq"><div><div class="k">Баланс</div><div class="v">${money(start + all)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div><div><div class="k">За всё время</div><div class="v ${cls(all)}">${money(all, true)}</div></div></div>`; })() : ""}
+      ${start != null ? (() => { const all = list.reduce((a, p) => a + p.v, 0); return `<div class="eq"><div><div class="k">Баланс</div><div class="v">${cm(start + all)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div><div><div class="k">За всё время</div><div class="v ${cls(all)}">${cm(all, true)}</div></div></div>`; })() : ""}
     </div>
     <div class="tiles">
-      ${tile(`За ${n} ${M.many.replace("дней", plural(n, ["день", "дня", "дней"])).replace("недель", plural(n, ["неделю", "недели", "недель"])).replace("месяцев", plural(n, ["месяц", "месяца", "месяцев"]))}`, money(tot, true), "USDT", cls(tot))}
-      ${tile({ day: "Лучший день", week: "Лучшая неделя", month: "Лучший месяц" }[m], best && best.v > 0 ? money(best.v, true) : "—", best && best.v > 0 ? unitLabel(s.starts[best.i], m, true) : "", "up")}
+      ${tile(`За ${n} ${M.many.replace("дней", plural(n, ["день", "дня", "дней"])).replace("недель", plural(n, ["неделю", "недели", "недель"])).replace("месяцев", plural(n, ["месяц", "месяца", "месяцев"]))}`, cm(tot, true), CUR(), cls(tot))}
+      ${tile({ day: "Лучший день", week: "Лучшая неделя", month: "Лучший месяц" }[m], best && best.v > 0 ? cm(best.v, true) : "—", best && best.v > 0 ? unitLabel(s.starts[best.i], m, true) : "", "up")}
       ${tile("Лучшая серия", streakTxt(streak(s.vals), m), "подряд в плюсе")}
       ${tile("В статистике", nz.length + " " + plural(nz.length, { day: ["день", "дня", "дней"], week: ["неделя", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] }[m]), "из последних " + n)}
     </div>
     ${histHtml(s.starts.map((d, i) => [unitLabel(d, m, true), s.vals[i]]).filter((r) => r[1]).reverse())}`;
-  return { html, n, line: false, tip: (i) => `${unitLabel(s.starts[i], m, true)} · <b class="${cls(s.vals[i])}">${money(s.vals[i], true)}</b>` };
+  return { html, n, line: false, tip: (i) => `${unitLabel(s.starts[i], m, true)} · <b class="${cls(s.vals[i])}">${cm(s.vals[i], true)}</b>` };
 }
 function plural(n, f) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? f[0] : a >= 2 && a <= 4 && (b < 12 || b > 14) ? f[1] : f[2]; }
 // Декоративный график «вверх со стрелкой» — для гостя и для резидента без данных
@@ -989,7 +1021,10 @@ function renderStats() {
   }
   if (!PNL.length) { box.innerHTML = teaserHtml(TEXTS.statsEmpty, TEXTS.statsEmptyText, false); return; }
   const v = statsView(PNL, START, mode);
-  box.innerHTML = v.html + `<div class="st-note">${TEXTS.statsNote}</div>`;
+  box.innerHTML = curHtml() + v.html + `<div class="st-note">${TEXTS.statsNote}${CUR() === "₽" ? "<br>Суммы в рублях — по курсу, курс обновляется раз в день" : ""}</div>`;
+  box.querySelectorAll("[data-cur]").forEach((b) => b.addEventListener("click", () => {
+    CURR = b.dataset.cur; try { localStorage.setItem("ordo_cur", CURR); } catch (e) {} haptic(); renderStats();
+  }));
   box.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.mode; histAll = false; haptic(); renderStats(); }));
   const more = $("#histMore"); if (more) more.addEventListener("click", () => { histAll = !histAll; renderStats(); });
   // палец по графику — подсказка с датой и суммой
