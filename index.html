@@ -248,6 +248,16 @@
   .kv .v { font-family: ui-monospace, monospace; font-size: 11.5px; text-align: right; word-break: break-all; }
   .kv:last-child { padding-bottom: 15px; }
 
+  /* ═══ ГЛАВНАЯ: плашка-отсчёт до старта ═══ */
+  .cd { position: absolute; z-index: 3; top: calc(var(--safe-top) + 14px); left: 16px; min-width: 168px; padding: 9px 14px 8px; border-radius: 16px; border-width: 1px; border-color: rgba(176,102,255,.55); box-shadow: 0 6px 24px rgba(0,0,0,.45), 0 0 22px rgba(143,61,255,.25); }
+  .cd-top { display: flex; align-items: center; font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #cbb7ec; }
+  .cd-top .okdot { width: 6px; height: 6px; margin-right: 7px; background: var(--violet-2); box-shadow: 0 0 8px var(--violet-2); animation: breathe-dot 2s ease-in-out infinite; }
+  @keyframes breathe-dot { 50% { opacity: .35; } }
+  .cd-num { margin-top: 4px; display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+  .cd-num b { font-family: Michroma, sans-serif; font-weight: 400; font-size: 19px; line-height: 1.1; text-shadow: 0 0 14px rgba(176,102,255,.6); }
+  .cd-num span { font-size: 11.5px; color: var(--gray); margin-right: 6px; }
+  .cd-date { margin-top: 2px; text-align: right; font-size: 10.5px; color: var(--muted); }
+
   /* ═══ ГЛАВНАЯ: плавный переход к «Что внутри» ═══ */
   .scroll { cursor: pointer; }
   .dive { position: relative; margin-top: 10px; }
@@ -391,6 +401,11 @@
   <!-- ═══ ЭКРАН 1: КЛУБ ═══ -->
   <section class="screen active" id="s-home">
     <div class="hero">
+      <div class="cd glass" id="countdown">
+        <div class="cd-top"><span class="okdot"></span><span id="cdLabel"></span></div>
+        <div class="cd-num" id="cdNum"></div>
+        <div class="cd-date" id="cdDate"></div>
+      </div>
       <img src="img/hero.jpg" alt="ORDO TEAM">
       <button class="orb" id="orbBtn"><span id="orbLabel"></span></button>
       <button class="scroll" id="scrollBtn">
@@ -477,7 +492,6 @@
       </div>
       <h2 class="duo reveal" style="font-size:32px; margin-top:26px; animation-delay:.06s"><span class="g" id="pHA"></span><span class="w" id="pHB"></span></h2>
       <div class="reveal" style="animation-delay:.12s" id="pCard"></div>
-      <div class="reveal" style="animation-delay:.16s" id="pRes"></div>
       <div class="reveal" style="animation-delay:.2s; margin-top:12px" id="pRows"></div>
       <div class="stack reveal" style="animation-delay:.28s; margin-top:20px">
         <button class="white-btn" id="pMain"><span id="pMainT"></span><span class="a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span></button>
@@ -542,7 +556,11 @@ const TEXTS = {
   statsEmpty: "Твой путь только начинается",
   statsEmptyText: "Скоро здесь появятся твои прибыль, убыль и рост баланса — по дням, неделям и месяцам.",
   statsNote: "ORDO TEAM · личная статистика резидента",
-  resEmpty: "Скоро здесь появится твой результат",
+  // отсчёт на Главной — старт курса 10 января 2027, 00:00 по Москве
+  startAt: "2027-01-10T00:00:00+03:00",
+  cdLabel: "До старта",
+  cdDate: "10 января 2027",
+  cdDone: "Мы стартовали",
 };
 
 /* ═══ ДАННЫЕ ОТ БОТА: ?c=КОД&p=ЦЕНА&w=КОШЕЛЁК&paid=0|1 (без них — демо) ═══ */
@@ -598,6 +616,18 @@ const row = (n, t, d, i) => `<div class="row-i reveal" style="animation-delay:${
 $("#features").innerHTML = TEXTS.features.map((f, i) => row("0" + (i + 1), f.title, f.text, i)).join("");
 $("#steps").innerHTML = TEXTS.steps.map((s, i) => row("0" + (i + 1), s.title, s.text, i)).join("");
 $("#faq").innerHTML = TEXTS.faq.map((f) => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join("");
+
+/* ── отсчёт до старта: дни и часы, обновляется раз в 30 секунд ── */
+(function countdown() {
+  const left = new Date(TEXTS.startAt) - Date.now();
+  $("#cdDate").textContent = TEXTS.cdDate;
+  if (left <= 0) { $("#cdLabel").textContent = TEXTS.cdDone; $("#cdNum").innerHTML = ""; return; }
+  const d = Math.floor(left / 864e5), h = Math.floor((left % 864e5) / 36e5);
+  const word = (n, f) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? f[0] : a >= 2 && a <= 4 && (b < 12 || b > 14) ? f[1] : f[2]; };
+  $("#cdLabel").textContent = TEXTS.cdLabel;
+  $("#cdNum").innerHTML = `<b>${d}</b><span>${word(d, ["день", "дня", "дней"])}</span><b>${h}</b><span>${word(h, ["час", "часа", "часов"])}</span>`;
+  setTimeout(countdown, 30000);
+})();
 
 /* ── фиолетовая пыль ── */
 (() => {
@@ -735,16 +765,6 @@ function renderProfile(fresh) {
   $("#pMainT").textContent = !m ? TEXTS.joinCta : noGroup ? "Написать админу" : "Перейти в группу";
   $("#pAdmin").hidden = noGroup || (!S.admin && !DEMO_UI);
   $("#pMain").hidden = noGroup && !S.admin;
-  // мини-карточка «Мой результат» → вкладка «Анализ»
-  let res = "";
-  if (m) {
-    const t30 = sumSince(PNL, 30);
-    res = PNL.length
-      ? `<div class="rescard" data-go="stats"><div><div class="label">Мой результат · 30 дней</div><div class="v ${cls(t30)}">${money(t30, true)} <small style="font-family:Inter;font-size:12px;color:var(--muted)">USDT</small></div></div><span class="arr">→</span></div>`
-      : `<div class="rescard" data-go="stats"><div><div class="label">Мой результат</div><div style="font-size:13px;margin-top:3px;color:#cfcbd8">${TEXTS.resEmpty}</div></div><span class="arr">→</span></div>`;
-  }
-  $("#pRes").innerHTML = res;
-  $("#pRes").querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
 }
 /* ── числа ── */
 const money = (v, sign) => (sign && v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
