@@ -373,6 +373,11 @@
   #s-admin .st-head { padding-top: calc(var(--safe-top) + 72px); }
   .urow { background: var(--panel); border-radius: 18px; overflow: hidden; border: 1px solid transparent; transition: border-color .25s; }
   .urow.open { border-color: rgba(176,102,255,.45); }
+  .urow { position: relative; }
+  .urow.hasq .uh { padding-right: 118px; }
+  .qgrant { position: absolute; right: 12px; top: 10px; height: 38px; padding: 0 12px; border-radius: 12px; font-size: 11px; font-weight: 700; line-height: 1.15; color: #111; background: #fff; box-shadow: 0 0 16px rgba(190,140,255,.35); }
+  .qgrant.on { background: rgba(143,61,255,.25); color: #e2ccff; border: 1px solid var(--violet-2); box-shadow: none; }
+  .qgrant small { display: block; font-size: 9.5px; font-weight: 600; opacity: .7; }
   .urow .uh { width: 100%; display: flex; align-items: center; gap: 11px; padding: 11px 14px; text-align: left; }
   .urow .ua, .qrow .ua { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--panel-2); border: 1.5px solid rgba(255,255,255,.2); color: var(--gray); font-weight: 600; }
   .urow .ua.member, .qrow .ua.member { border-color: var(--violet-2); color: #e6d6ff; background: #21133a; }
@@ -1167,7 +1172,7 @@ function renderAdmin() {
 function renderPeople() {
   $("#admBody").innerHTML = `<div class="viewas">Смотреть апку как: ${[["real", "Я"], ["guest", "Гость"], ["member", "Резидент"]].map(([k, t]) => `<button data-va="${k}" class="${viewAs === k ? "on" : ""}">${t}</button>`).join("")}</div>
     <input class="search" id="admSearch" placeholder="Поиск: имя, @ник или номер пропуска" value="${esc(admQ)}" autocomplete="off">
-    <div class="label" style="margin-top:16px">Люди · ${ADM.u.length}</div>
+    <div class="days" id="ufilt" style="margin-top:14px"></div>
     <div class="ulist" id="ulist"></div>`;
   $("#admBody").querySelectorAll("[data-va]").forEach((b) => b.addEventListener("click", () => {
     viewAs = b.dataset.va; S.paid = viewAs === "real" ? REAL_PAID : viewAs === "member";
@@ -1175,6 +1180,7 @@ function renderPeople() {
     toast(viewAs === "real" ? "Как есть" : "Только на твоём экране");
   }));
   $("#admSearch").addEventListener("input", (e) => { admQ = e.target.value; renderUlist(); });
+  $("#ufilt").addEventListener("click", (e) => { const b = e.target.closest("[data-uf]"); if (b) { uFilter = b.dataset.uf; haptic(); renderUlist(); } });
   $("#ulist").addEventListener("click", onListClick);
   renderUlist();
 }
@@ -1234,16 +1240,28 @@ function syncQuick(id) {
 let editId = null, editNeg = false;
 const isEdited = (id) => OPS.some((x) => (x.o === "edit" && String(x.id) === String(id)) || x.tmp === id);
 function changedU(id) { return OPS.some((o) => o.u === id || (o.o === "del" && o.uid === id)); }
+let uFilter = "all";  // фильтр списка: all / guest / member
+// Быстрая кнопка в строке (только админ): гостю — «Сделать резидентом», если уже нажато — «Отменить»
+function quickBtn(u) {
+  if (ROLE !== "admin") return "";
+  const pend = OPS.some((o) => o.o === "grant" && o.u === u.i);
+  if (pend) return `<button class="qgrant on" data-a="grant">✓ Резидент<small>отменить</small></button>`;
+  return u.p ? "" : `<button class="qgrant" data-a="grant">Сделать<br>резидентом</button>`;
+}
 function renderUlist() {
   const qq = admQ.trim().toLowerCase().replace(/^[@#]/, "");
-  const list = ADM.u.filter((u) => !qq || (u.n || "").toLowerCase().includes(qq) || (u.un || "").toLowerCase().includes(qq) || String(u.no || "").includes(qq) || String(u.i).includes(qq));
+  const cnt = { all: ADM.u.length, guest: ADM.u.filter((u) => !u.p).length, member: ADM.u.filter((u) => u.p).length };
+  $("#ufilt").innerHTML = [["all", "Все"], ["guest", "Гости"], ["member", "Резиденты"]].map(([k, t]) => `<button data-uf="${k}" class="${uFilter === k ? "on" : ""}">${t} · ${cnt[k]}</button>`).join("");
+  const list = ADM.u.filter((u) => (uFilter === "all" || (uFilter === "member") === !!u.p) &&
+    (!qq || (u.n || "").toLowerCase().includes(qq) || (u.un || "").toLowerCase().includes(qq) || String(u.no || "").includes(qq) || String(u.i).includes(qq)));
   $("#ulist").innerHTML = list.map((u) => {
     const name = esc(u.n || (u.un ? "@" + u.un : "ID " + u.i));
     const badge = u.adm ? '<span class="badge">АДМИН</span>' : u.mod ? '<span class="badge">МОД</span>' : "";
-    return `<div class="urow${openId === u.i ? " open" : ""}" data-u="${u.i}">
+    return `<div class="urow${openId === u.i ? " open" : ""}${quickBtn(u) ? " hasq" : ""}" data-u="${u.i}">
       <button class="uh"><span class="ua${u.p ? " member" : ""}">${esc((u.n || u.un || "?")[0].toUpperCase())}</span>
         <span class="ut"><b>${name}${badge}${changedU(u.i) ? '<span class="badge ch">ИЗМ.</span>' : ""}</b><span>${u.un ? "@" + esc(u.un) + " · " : ""}${u.p ? "Резидент #" + (u.no || "····") : "Гость"}</span></span>
-        <span class="ur ${cls(u.pt)}">${u.pc ? money(u.pt, true) : "—"}<small>${u.pc ? "USD · " + u.pc + " зап." : "нет PnL"}</small></span></button>
+        ${quickBtn(u) ? "" : `<span class="ur ${cls(u.pt)}">${u.pc ? money(u.pt, true) : "—"}<small>${u.pc ? "USD · " + u.pc + " зап." : "нет PnL"}</small></span>`}</button>
+      ${quickBtn(u)}
       ${openId === u.i ? detailHtml(u) : ""}</div>`;
   }).join("") || `<div class="empty" style="margin-top:6px">Никого не нашли</div>`;
 }
@@ -1321,7 +1339,8 @@ function onListClick(e) {
 function addOp(op) {
   const u = op.u ? findU(op.u) : findU(op.uid);
   if (op.o === "grant" || op.o === "revoke") {
-    const opp = op.o === "grant" ? "revoke" : "grant", i = OPS.findIndex((x) => x.o === opp && x.u === op.u);
+    const opp = op.o === "grant" ? "revoke" : "grant", same = OPS.findIndex((x) => x.o === op.o && x.u === op.u);
+    const i = same >= 0 ? same : OPS.findIndex((x) => x.o === opp && x.u === op.u);  // повторное нажатие — отмена
     if (i >= 0) { OPS.splice(i, 1); const o = origU(op.u); Object.assign(u, { p: o.p, no: o.no, d: o.d, m: o.m }); }
     else {
       OPS.push(op);
