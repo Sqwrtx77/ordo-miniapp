@@ -271,7 +271,7 @@
   .rescard .arr { color: var(--gray); }
 
   /* ═══ АНАЛИЗ ═══ */
-  :root { --up: #3ddc97; --down: #ff5c7a; }
+  :root { --up: #3ddc97; --down: #b9a7d6; }  /* минус — спокойный сиреневый, а не красный */
   .up { color: var(--up); } .down { color: var(--down); }
   .st-head { padding-top: calc(var(--safe-top) + 34px); }
   .seg { display: flex; gap: 6px; margin: 20px 0 14px; }
@@ -282,7 +282,7 @@
   .pnl-main .big small { font-family: Inter, sans-serif; font-size: 13px; color: var(--muted); margin-left: 6px; letter-spacing: 0; }
   .pnl-main .sub { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
   .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; background: rgba(61,220,151,.13); }
-  .pill.down { background: rgba(255,92,122,.13); }
+  .pill.down { background: rgba(185,167,214,.13); }
   .eq { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line); }
   .eq .k, .tile .k { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .eq .v { font-size: 15px; font-weight: 600; margin-top: 2px; }
@@ -847,6 +847,9 @@ function series(list, m, n) {
   let cut = Math.max(0, keys.findIndex((k) => k >= firstK)); cut = Math.min(cut, Math.max(0, n - 7));
   return { starts: starts.slice(cut), keys: keys.slice(cut), vals: vals.slice(cut).map((v) => Math.round(v * 100) / 100) };
 }
+// лучшая серия подряд в плюсе (пустые периоды серию не прерывают)
+const streak = (arr) => { let b = 0, c = 0; arr.forEach((v) => { if (v > 0) b = Math.max(b, ++c); else if (v < 0) c = 0; }); return b; };
+const streakTxt = (n, m) => n ? n + " " + plural(n, { day: ["день", "дня", "дней"], week: ["неделя", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] }[m]) : "—";
 const pct = (v) => `<span class="pill ${v < 0 ? "down" : ""} ${cls(v)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2)}%</span>`;
 const sumBefore = (list, k) => list.filter((p) => p.k < k).reduce((s, p) => s + p.v, 0);
 const W = 320, H = 150;
@@ -879,7 +882,7 @@ const tile = (k, v, s, c = "") => `<div class="tile"><div class="k">${k}</div><d
 function histHtml(rows) {
   const shown = histAll ? rows : rows.slice(0, 7);
   return `<div class="label" style="margin-top:28px">История</div>
-    <div class="hist">${shown.map(([l, v]) => `<div class="kv"><span class="k">${l}</span><span class="v ${cls(v)}">${money(v, true)} USDT</span></div>`).join("") || `<div class="kv"><span class="k">Записей пока нет</span></div>`}</div>
+    <div class="hist">${shown.map(([l, v]) => `<div class="kv"><span class="k">${l}</span><span class="v ${cls(v)}">${money(v, true)} USDT</span></div>`).join("") || `<div class="kv"><span class="k">Здесь появится история</span></div>`}</div>
     ${rows.length > 7 ? `<button class="more" id="histMore">${histAll ? "Свернуть" : "Показать все · " + rows.length}</button>` : ""}`;
 }
 
@@ -896,6 +899,7 @@ function statsView(list, start, m) {
     const wins = nz.filter((x) => x.v > 0).length;
     const best = nz.reduce((a, x) => (!a || x.v > a.v ? x : a), null), worst = nz.reduce((a, x) => (!a || x.v < a.v ? x : a), null);
     const mon = series(list, "month", 120);
+    const bestMon = mon.vals.map((v, i) => ({ v, i })).filter((x) => x.v > 0).reduce((a, x) => (!a || x.v > a.v ? x : a), null);
     const html = `${segHtml(m)}
       <div class="pnl-main">
         <div class="label">Общая доходность · с ${ddmm(list[0].k)}.${list[0].k.slice(0, 4)}</div>
@@ -906,10 +910,10 @@ function statsView(list, start, m) {
         ${start != null ? `<div class="eq"><div><div class="k">Баланс</div><div class="v">${money(start + all)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div><div><div class="k">Старт</div><div class="v">${money(start)} <small style="color:var(--muted);font-weight:500">USDT</small></div></div></div>` : ""}
       </div>
       <div class="tiles">
-        ${tile("Дней в плюсе", (nz.length ? Math.round((wins / nz.length) * 100) : 0) + "%", `${wins} из ${nz.length}`)}
-        ${tile("Средний день", nz.length ? money(all / nz.length, true) : "—", "USDT", cls(all))}
-        ${tile("Лучший день", best ? money(best.v, true) : "—", best ? ddmm(best.k) : "", best ? cls(best.v) : "")}
-        ${tile("Худший день", worst ? money(worst.v, true) : "—", worst ? ddmm(worst.k) : "", worst ? cls(worst.v) : "")}
+        ${tile("Лучший день", best && best.v > 0 ? money(best.v, true) : "—", best && best.v > 0 ? ddmm(best.k) : "", "up")}
+        ${tile("Лучшая серия", streakTxt(streak(nz.map((x) => x.v)), "day"), "подряд в плюсе")}
+        ${tile("Лучший месяц", bestMon ? money(bestMon.v, true) : "—", bestMon ? unitLabel(mon.starts[bestMon.i], "month", true) : "", "up")}
+        ${tile("В статистике", nz.length + " " + plural(nz.length, ["день", "дня", "дней"]), "с " + ddmm(list[0].k))}
       </div>
       ${histHtml(mon.starts.map((d, i) => [unitLabel(d, "month", true), mon.vals[i]]).filter((r) => r[1]).reverse())}`;
     return { html, n: cum.length, line: true, tip: (i) => `${ddmm(days[i])} · <b class="${cls(daily[i])}">${money(daily[i], true)}</b> · итог ${money(cum[i], true)}` };
@@ -930,9 +934,9 @@ function statsView(list, start, m) {
     </div>
     <div class="tiles">
       ${tile(`За ${n} ${M.many.replace("дней", plural(n, ["день", "дня", "дней"])).replace("недель", plural(n, ["неделю", "недели", "недель"])).replace("месяцев", plural(n, ["месяц", "месяца", "месяцев"]))}`, money(tot, true), "USDT", cls(tot))}
-      ${tile("В плюсе", (nz.length ? Math.round((wins / nz.length) * 100) : 0) + "%", `${wins} из ${nz.length}`)}
-      ${tile("Лучший", best ? money(best.v, true) : "—", best ? unitLabel(s.starts[best.i], m, true) : "", best ? cls(best.v) : "")}
-      ${tile("Худший", worst ? money(worst.v, true) : "—", worst ? unitLabel(s.starts[worst.i], m, true) : "", worst ? cls(worst.v) : "")}
+      ${tile({ day: "Лучший день", week: "Лучшая неделя", month: "Лучший месяц" }[m], best && best.v > 0 ? money(best.v, true) : "—", best && best.v > 0 ? unitLabel(s.starts[best.i], m, true) : "", "up")}
+      ${tile("Лучшая серия", streakTxt(streak(s.vals), m), "подряд в плюсе")}
+      ${tile("В статистике", nz.length + " " + plural(nz.length, { day: ["день", "дня", "дней"], week: ["неделя", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] }[m]), "из последних " + n)}
     </div>
     ${histHtml(s.starts.map((d, i) => [unitLabel(d, m, true), s.vals[i]]).filter((r) => r[1]).reverse())}`;
   return { html, n, line: false, tip: (i) => `${unitLabel(s.starts[i], m, true)} · <b class="${cls(s.vals[i])}">${money(s.vals[i], true)}</b>` };
@@ -1280,8 +1284,8 @@ async function check(manual) {
   if (manual) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Проверяю…'; st.className = "status"; st.textContent = ""; }
   try {
     if (await isPaid()) { markPaid(); return; }
-    if (manual) { st.className = "status warn"; st.textContent = `Пока не видно. Перевод идёт до 30 секунд — проверь, что указан код ${S.code}.`; }
-  } catch (e) { if (manual) { st.className = "status warn"; st.textContent = "Не удалось проверить, попробуй ещё раз через минуту."; } }
+    if (manual) { st.className = "status warn"; st.textContent = `Ждём перевод — обычно он доходит за полминуты. Проверь, что указан код ${S.code}.`; }
+  } catch (e) { if (manual) { st.className = "status warn"; st.textContent = "Сеть немного задумалась — нажми ещё раз через минуту."; } }
   finally { checking = false; btn.disabled = false; btn.textContent = "Я оплатил — проверить"; }
 }
 $("#checkBtn").addEventListener("click", () => { haptic(); check(true); });
