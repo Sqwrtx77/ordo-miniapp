@@ -535,12 +535,14 @@ const TEXTS = {
 
   // анализ
   statsA: "Анализ", statsB: "доходности",
-  statsLead: "Твоя прибыль и убыль: за день, неделю, месяц и всё время",
+  statsLead: "Здесь будет твоя статистика",
+  statsLeadData: "Твоя статистика: день, неделя, месяц и всё время",
   statsLocked: "Доступно резидентам",
   statsLockedText: "Личная статистика: прибыль, убыль, лучшие дни и рост баланса.",
-  statsEmpty: "Пока нет данных",
-  statsEmptyText: "Как только модератор внесёт твои результаты, здесь появятся график и статистика.",
-  statsNote: "Данные вносят модераторы ORDO TEAM вручную",
+  statsEmpty: "Твой путь только начинается",
+  statsEmptyText: "Скоро здесь появятся твои прибыль, убыль и рост баланса — по дням, неделям и месяцам.",
+  statsNote: "ORDO TEAM · личная статистика резидента",
+  resEmpty: "Скоро здесь появится твой результат",
 };
 
 /* ═══ ДАННЫЕ ОТ БОТА: ?c=КОД&p=ЦЕНА&w=КОШЕЛЁК&paid=0|1 (без них — демо) ═══ */
@@ -739,7 +741,7 @@ function renderProfile(fresh) {
     const t30 = sumSince(PNL, 30);
     res = PNL.length
       ? `<div class="rescard" data-go="stats"><div><div class="label">Мой результат · 30 дней</div><div class="v ${cls(t30)}">${money(t30, true)} <small style="font-family:Inter;font-size:12px;color:var(--muted)">USDT</small></div></div><span class="arr">→</span></div>`
-      : `<div class="rescard" data-go="stats"><div><div class="label">Мой результат</div><div style="font-size:13px;margin-top:3px;color:#cfcbd8">Появится, когда модератор внесёт данные</div></div><span class="arr">→</span></div>`;
+      : `<div class="rescard" data-go="stats"><div><div class="label">Мой результат</div><div style="font-size:13px;margin-top:3px;color:#cfcbd8">${TEXTS.resEmpty}</div></div><span class="arr">→</span></div>`;
   }
   $("#pRes").innerHTML = res;
   $("#pRes").querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
@@ -919,6 +921,7 @@ function teaserHtml(title, text, withBtn) {
 }
 function renderStats() {
   const box = $("#stBody");
+  document.querySelector('[data-t="statsLead"]').textContent = S.paid && PNL.length ? TEXTS.statsLeadData : TEXTS.statsLead;
   if (!S.paid) {
     box.innerHTML = teaserHtml(TEXTS.statsLocked, TEXTS.statsLockedText, true);
     $("#stJoin").addEventListener("click", () => go("join"));
