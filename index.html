@@ -425,7 +425,7 @@
   </button>
   <button class="tab" data-go="stats">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 15l4.5-4.5 3.5 3.5L19.5 7"/><path d="M15 7h4.5v4.5"/></svg>
-    Анализ
+    Доходность
   </button>
 </nav>
 <button class="back glass" id="backBtn" aria-label="Назад"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -480,7 +480,7 @@
   <!-- ═══ ЭКРАН: АНАЛИЗ (статистика резидента) ═══ -->
   <section class="screen" id="s-stats">
     <div class="pad st-head">
-      <h2 class="duo reveal" style="font-size:34px"><span class="g" data-t="statsA"></span><span class="w" data-t="statsB"></span></h2>
+      <h2 class="duo reveal" style="font-size:34px"><span class="g" id="stHA"></span><span class="w" id="stHB"></span></h2>
       <div class="vline reveal" style="animation-delay:.05s"></div>
       <p class="small reveal" style="animation-delay:.08s; margin:0" data-t="statsLead"></p>
       <div class="reveal" style="animation-delay:.12s" id="stBody"></div>
@@ -587,7 +587,8 @@ const TEXTS = {
   paidToast: "Оплата пришла — добро пожаловать",
 
   // анализ
-  statsA: "Анализ", statsB: "доходности",
+  statsA: "Анализ", statsB: "доходности",   // заголовок, пока доступ закрыт (это функция, которую получаешь)
+  statsTitle: "Доходность",                 // заголовок у резидента
   statsLead: "Здесь будет твоя статистика",
   statsLeadData: "Твоя статистика: день, неделя, месяц и всё время",
   statsLocked: "Доступно резидентам",
@@ -1018,6 +1019,8 @@ function teaserHtml(title, text, withBtn) {
 }
 function renderStats() {
   const box = $("#stBody");
+  $("#stHA").textContent = S.paid ? "" : TEXTS.statsA; $("#stHA").hidden = S.paid;
+  $("#stHB").textContent = S.paid ? TEXTS.statsTitle : TEXTS.statsB;
   document.querySelector('[data-t="statsLead"]').textContent = S.paid && PNL.length ? TEXTS.statsLeadData : TEXTS.statsLead;
   if (!S.paid) {
     box.innerHTML = teaserHtml(TEXTS.statsLocked, TEXTS.statsLockedText, true);
