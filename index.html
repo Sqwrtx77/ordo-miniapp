@@ -1228,8 +1228,12 @@ $("#saveGo").addEventListener("click", () => {
   const data = JSON.stringify({ v: 1, ops: OPS.map(({ tmp, uid, ...o }) => o) });
   if (data.length > 4000) return toast("Слишком много изменений сразу — сохрани часть");
   haptic("medium");
-  if (tg && FROM_KB && tg.platform !== "unknown") {
-    try { tg.sendData(data); return; } catch (e) { return toast("Открой панель кнопкой «⚙️ Управление» в чате"); }
+  // Панель открыта кнопкой «⚙️ Управление» — просто отправляем боту (Telegram сам закроет апку).
+  // Никаких доп. проверок: при таком запуске Telegram не передаёт initData, а platform бывает «unknown».
+  if (tg && FROM_KB) {
+    try { tg.sendData(data); } catch (e) { return toast("Не отправилось: " + (e && e.message ? e.message : e)); }
+    setTimeout(() => toast("Если панель не закрылась — закрой её и открой «⚙️ Управление» заново"), 2500);
+    return;
   }
   if (DEMO_UI) { console.log("Демо, ушло бы боту:", data); ADM0 = clone(ADM); OPS = []; qVal = {}; qSign = {}; updateSaveBar(); renderAdmin(); return toast("Демо: изменения ушли бы боту"); }
   toast("Сохранять можно только из кнопки «⚙️ Управление» в чате");
