@@ -863,9 +863,9 @@ function curHtml() {
 }
 let mode = "day", histAll = false;
 const MODES = {
-  day:   { t: "День",   n: 30, cur: "Сегодня",      prev: "Вчера",           many: "дней",    chart: "Статистика по дням" },
-  week:  { t: "Неделя", n: 12, cur: "Эта неделя",   prev: "Прошлая неделя",  many: "недель",  chart: "Статистика по неделям" },
-  month: { t: "Месяц",  n: 12, cur: "Этот месяц",   prev: "Прошлый месяц",   many: "месяцев", chart: "Статистика по месяцам" },
+  day:   { t: "День",   n: 30, cur: "PnL · Сегодня",    prev: "Вчера",           many: "дней",    chart: "PnL по дням" },
+  week:  { t: "Неделя", n: 12, cur: "PnL · Эта неделя", prev: "Прошлая неделя",  many: "недель",  chart: "PnL по неделям" },
+  month: { t: "Месяц",  n: 12, cur: "PnL · Этот месяц", prev: "Прошлый месяц",   many: "месяцев", chart: "PnL по месяцам" },
   all:   { t: "Общая" },
 };
 const MON = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
@@ -900,6 +900,7 @@ function series(list, m, n) {
 // лучшая серия подряд в плюсе (пустые периоды серию не прерывают)
 const streak = (arr) => { let b = 0, c = 0; arr.forEach((v) => { if (v > 0) b = Math.max(b, ++c); else if (v < 0) c = 0; }); return b; };
 const streakTxt = (n, m) => n ? n + " " + plural(n, { day: ["день", "дня", "дней"], week: ["неделя", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] }[m]) : "—";
+const roiTxt = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2) + "%";
 const pct = (v) => `<span class="pill ${v < 0 ? "down" : ""} ${cls(v)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2)}%</span>`;
 const sumBefore = (list, k) => list.filter((p) => p.k < k).reduce((s, p) => s + p.v, 0);
 const W = 320, H = 150;
@@ -952,18 +953,18 @@ function statsView(list, start, m) {
     const bestMon = mon.vals.map((v, i) => ({ v, i })).filter((x) => x.v > 0).reduce((a, x) => (!a || x.v > a.v ? x : a), null);
     const html = `${segHtml(m)}
       <div class="pnl-main">
-        <div class="label">Общая доходность · с ${ddmm(list[0].k)}.${list[0].k.slice(0, 4)}</div>
+        <div class="label">Общий PnL · с ${ddmm(list[0].k)}.${list[0].k.slice(0, 4)}</div>
         <div class="big ${cls(all)}">${cm(all, true)}<small>${CUR()}</small></div>
         <div class="sub">${start > 0 ? pct((all / start) * 100) : ""}<span>за ${days.length} ${plural(days.length, ["день", "дня", "дней"])}</span></div>
         <div class="chart" id="chart">${lineSvg(cum)}<div class="tip" id="ctip"></div></div>
-        <div class="axis"><span>${ddmm(days[0])}</span><span>Рост результата</span><span>${ddmm(days[days.length - 1])}</span></div>
+        <div class="axis"><span>${ddmm(days[0])}</span><span>Совокупный PnL</span><span>${ddmm(days[days.length - 1])}</span></div>
         ${start != null ? `<div class="eq"><div><div class="k">Баланс</div><div class="v">${cm(start + all)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div><div><div class="k">Старт</div><div class="v">${cm(start)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div></div>` : ""}
       </div>
       <div class="tiles">
-        ${tile("Лучший день", best && best.v > 0 ? cm(best.v, true) : "—", best && best.v > 0 ? ddmm(best.k) : "", "up")}
-        ${tile("Лучшая серия", streakTxt(streak(nz.map((x) => x.v)), "day"), "подряд в плюсе")}
-        ${tile("Лучший месяц", bestMon ? cm(bestMon.v, true) : "—", bestMon ? unitLabel(mon.starts[bestMon.i], "month", true) : "", "up")}
-        ${tile("В статистике", nz.length + " " + plural(nz.length, ["день", "дня", "дней"]), "с " + ddmm(list[0].k))}
+        ${start > 0 ? tile("ROI", roiTxt((all / start) * 100), "от стартового баланса", cls(all)) : tile("Общий PnL", cm(all, true), CUR(), cls(all))}
+        ${tile("Средний PnL", nz.length ? cm(all / nz.length, true) : "—", "в день, " + CUR(), cls(all))}
+        ${tile("Серия в плюсе", streakTxt(streak(nz.map((x) => x.v)), "day"), "лучшая подряд")}
+        ${tile("Торговых дней", String(nz.length), "с " + ddmm(list[0].k))}
       </div>
       ${histHtml(mon.starts.map((d, i) => [unitLabel(d, "month", true), mon.vals[i]]).filter((r) => r[1]).reverse())}`;
     return { html, n: cum.length, line: true, tip: (i) => `${ddmm(days[i])} · <b class="${cls(daily[i])}">${cm(daily[i], true)}</b> · итог ${cm(cum[i], true)}` };
@@ -981,13 +982,15 @@ function statsView(list, start, m) {
       <div class="sub">${base > 0 ? pct((cur / base) * 100) : ""}<span>${M.prev}: <b class="${cls(prev)}">${cm(prev, true)}</b></span></div>
       <div class="chart" id="chart">${barsSvg(s.vals)}<div class="tip" id="ctip"></div></div>
       <div class="axis"><span>${unitLabel(s.starts[0], m)}</span><span>${M.chart}</span><span>${unitLabel(s.starts[n - 1], m)}</span></div>
-      ${start != null ? (() => { const all = list.reduce((a, p) => a + p.v, 0); return `<div class="eq"><div><div class="k">Баланс</div><div class="v">${cm(start + all)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div><div><div class="k">За всё время</div><div class="v ${cls(all)}">${cm(all, true)}</div></div></div>`; })() : ""}
+      ${start != null ? (() => { const all = list.reduce((a, p) => a + p.v, 0); return `<div class="eq"><div><div class="k">Баланс</div><div class="v">${cm(start + all)} <small style="color:var(--muted);font-weight:500">${CUR()}</small></div></div><div><div class="k">Общий PnL</div><div class="v ${cls(all)}">${cm(all, true)}</div></div></div>`; })() : ""}
     </div>
     <div class="tiles">
-      ${tile(`За ${n} ${M.many.replace("дней", plural(n, ["день", "дня", "дней"])).replace("недель", plural(n, ["неделю", "недели", "недель"])).replace("месяцев", plural(n, ["месяц", "месяца", "месяцев"]))}`, cm(tot, true), CUR(), cls(tot))}
-      ${tile({ day: "Лучший день", week: "Лучшая неделя", month: "Лучший месяц" }[m], best && best.v > 0 ? cm(best.v, true) : "—", best && best.v > 0 ? unitLabel(s.starts[best.i], m, true) : "", "up")}
-      ${tile("Лучшая серия", streakTxt(streak(s.vals), m), "подряд в плюсе")}
-      ${tile("В статистике", nz.length + " " + plural(nz.length, { day: ["день", "дня", "дней"], week: ["неделя", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] }[m]), "из последних " + n)}
+      ${tile(`PnL за ${n} ${M.many.replace("дней", plural(n, ["день", "дня", "дней"])).replace("недель", plural(n, ["неделю", "недели", "недель"])).replace("месяцев", plural(n, ["месяц", "месяца", "месяцев"]))}`, cm(tot, true), CUR(), cls(tot))}
+      ${(() => { const b0 = start != null ? start + sumBefore(list, s.keys[0]) : 0;
+        return b0 > 0 ? tile("ROI", roiTxt((tot / b0) * 100), "за этот период", cls(tot))
+          : tile("Средний PnL", nz.length ? cm(tot / nz.length, true) : "—", { day: "в день", week: "в неделю", month: "в месяц" }[m] + ", " + CUR(), cls(tot)); })()}
+      ${tile("Серия в плюсе", streakTxt(streak(s.vals), m), "лучшая подряд")}
+      ${tile({ day: "Торговых дней", week: "Активных недель", month: "Активных месяцев" }[m], String(nz.length), "из последних " + n)}
     </div>
     ${histHtml(s.starts.map((d, i) => [unitLabel(d, m, true), s.vals[i]]).filter((r) => r[1]).reverse())}`;
   return { html, n, line: false, tip: (i) => `${unitLabel(s.starts[i], m, true)} · <b class="${cls(s.vals[i])}">${cm(s.vals[i], true)}</b>` };
